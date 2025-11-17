@@ -63,7 +63,9 @@ function App() {
 
   return (
     <div className="App">
-      <Header isAuthenticated={isAuthenticated} onLogout={handleLogout} setPage={setCurrentPage} />
+      {!isAuthenticated && (
+        <Header isAuthenticated={isAuthenticated} onLogout={handleLogout} setPage={setCurrentPage} />
+      )}
       {renderPage()}
 
       {/* Auth modal removed: sign-in / sign-up are full pages now */}

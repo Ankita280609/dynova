@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Logo, FileIcon, ChartIcon, HelpIcon, SearchIcon, BellIcon, PlusIcon, BarChartIcon, MoreHorizontalIcon, AiBotIcon, ArrowRightIcon } from './Icons';
 import EmailModal from './EmailModal';
 
-const DashboardPage = ({ setPage }) => {
+const DashboardPage = ({ setPage, onLogout }) => {
   const [activeTab, setActiveTab] = useState('active');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -41,6 +41,9 @@ const DashboardPage = ({ setPage }) => {
             <div className="header-right">
               <button className="notification-btn"><BellIcon /></button>
               <button className="btn-create-form" onClick={() => setPage && setPage('formEditor')}><PlusIcon /> Create New Form</button>
+              {onLogout && (
+                <button className="btn-logout" onClick={onLogout}>Logout</button>
+              )}
             </div>
           </header>
 
