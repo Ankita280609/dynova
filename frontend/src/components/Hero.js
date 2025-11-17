@@ -1,9 +1,8 @@
 import React from 'react';
 
-export default function Hero({ setPage, setAuthModalState }) {
+export default function Hero({ setPage }) {
     const openSignUp = () => {
-        if (setAuthModalState) setAuthModalState('signUp');
-        else setPage && setPage('signUp');
+        setPage && setPage('signUp');
     };
 
     return (
