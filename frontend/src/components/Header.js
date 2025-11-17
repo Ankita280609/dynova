@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function Header({ setPage, setAuthModalState }) {
+export default function Header({ setPage, isAuthenticated, onLogout }) {
     const [isNavOpen, setIsNavOpen] = useState(false);
     const toggleNav = () => {
         setIsNavOpen(!isNavOpen);
@@ -15,8 +15,7 @@ export default function Header({ setPage, setAuthModalState }) {
     };
 
     const openSignIn = () => {
-        if (setAuthModalState) setAuthModalState('signIn');
-        else setPage && setPage('signIn');
+        setPage && setPage('signIn');
     };
 
     return (
@@ -40,7 +39,11 @@ export default function Header({ setPage, setAuthModalState }) {
                 </nav>
 
                 <div className="nav-right">
-                    <button onClick={openSignIn} className="btn btn-login">Login</button>
+                    {!isAuthenticated ? (
+                        <button onClick={openSignIn} className="btn btn-login">Login</button>
+                    ) : (
+                        <button onClick={onLogout} className="btn btn-logout">Logout</button>
+                    )}
 
                     <button className="btn-mobile-nav" onClick={toggleNav}>
                         <svg className="icon-mobile-nav" name="menu" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">

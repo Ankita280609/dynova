@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 
-function SignUpForm({ switchToSignIn, setPage }) {
+function SignUpForm({ switchToSignIn, setPage, onAuthSuccess }) {
     const handleSignUp = (e) => {
         e.preventDefault();
         console.log('Simulating user sign up...');
-        setPage && setPage('dashboard');
+        if (onAuthSuccess) onAuthSuccess();
+        else setPage && setPage('dashboard');
     };
 
     return (
@@ -30,11 +31,12 @@ function SignUpForm({ switchToSignIn, setPage }) {
     );
 }
 
-function SignInForm({ switchToSignUp, setPage }) {
+function SignInForm({ switchToSignUp, setPage, onAuthSuccess }) {
     const handleSignIn = (e) => {
         e.preventDefault();
         console.log('Simulating user sign in...');
-        setPage && setPage('dashboard');
+        if (onAuthSuccess) onAuthSuccess();
+        else setPage && setPage('dashboard');
     };
 
     return (
@@ -59,7 +61,7 @@ function SignInForm({ switchToSignUp, setPage }) {
     );
 }
 
-export default function AuthPage({ initialState, setPage }) {
+export default function AuthPage({ initialState, setPage, onAuthSuccess }) {
     const [isSigningUp, setIsSigningUp] = useState(initialState === 'signUp');
 
     return (
@@ -79,9 +81,9 @@ export default function AuthPage({ initialState, setPage }) {
             </div>
             <div className="auth-page-right">
                 {isSigningUp ? (
-                    <SignUpForm switchToSignIn={() => setIsSigningUp(false)} setPage={setPage} />
+                    <SignUpForm switchToSignIn={() => setIsSigningUp(false)} setPage={setPage} onAuthSuccess={onAuthSuccess} />
                 ) : (
-                    <SignInForm switchToSignUp={() => setIsSigningUp(true)} setPage={setPage} />
+                    <SignInForm switchToSignUp={() => setIsSigningUp(true)} setPage={setPage} onAuthSuccess={onAuthSuccess} />
                 )}
             </div>
         </div>

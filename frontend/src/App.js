@@ -9,27 +9,37 @@ import Timeline from './components/Timeline';
 import VideoFeatureSection from './components/VideoFeatureSection';
 import HoverBarChart from './components/HoverBarChart';
 import AllFeaturesPage from './components/AllFeaturesPage';
-import AuthModal from './components/AuthModal';
+import AuthPage from './components/AuthPage';
 import DashboardPage from './components/DashboardPage';
 import FormEditorPage from './components/FormEditorPage';
 import AiChatPage from './components/AiChatPage';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
-  const [authModalState, setAuthModalState] = useState('closed');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     if (currentPage !== 'home') window.scrollTo(0, 0);
   }, [currentPage]);
+
+  const handleAuthSuccess = () => {
+    setIsAuthenticated(true);
+    setCurrentPage('dashboard');
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setCurrentPage('home');
+  };
 
   const renderPage = () => {
     switch (currentPage) {
       case 'home':
         return (
           <>
-            <Header setAuthModalState={setAuthModalState} setPage={setCurrentPage} />
+            <Header isAuthenticated={isAuthenticated} onLogout={handleLogout} setPage={setCurrentPage} />
             <main>
-              <Hero setAuthModalState={setAuthModalState} setPage={setCurrentPage} />
+              <Hero setPage={setCurrentPage} />
               <Features />
               <Timeline />
               <VideoFeatureSection setCurrentPage={setCurrentPage} />
@@ -37,6 +47,10 @@ function App() {
             </main>
           </>
         );
+      case 'signIn':
+        return <AuthPage initialState={'signIn'} setPage={setCurrentPage} onAuthSuccess={handleAuthSuccess} />;
+      case 'signUp':
+        return <AuthPage initialState={'signUp'} setPage={setCurrentPage} onAuthSuccess={handleAuthSuccess} />;
       case 'features':
         return <AllFeaturesPage setCurrentPage={setCurrentPage} />;
       case 'dashboard':
@@ -54,9 +68,7 @@ function App() {
     <div className="App">
       {renderPage()}
 
-      {authModalState !== 'closed' && (
-        <AuthModal initialState={authModalState} closeModal={() => setAuthModalState('closed')} setCurrentPage={setCurrentPage} />
-      )}
+      {/* Auth modal removed: sign-in / sign-up are full pages now */}
     </div>
   );
 }
