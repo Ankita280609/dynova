@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Logo, FileIcon, ChartIcon, HelpIcon, SearchIcon, BellIcon, PlusIcon, BarChartIcon, MoreHorizontalIcon, AiBotIcon, ArrowRightIcon } from './Icons';
+import { Logo, FileIcon, ChartIcon, HelpIcon, SearchIcon, BellIcon, PlusIcon, BarChartIcon, MoreHorizontalIcon, AiBotIcon, ArrowRightIcon, ArrowLeftIcon } from './Icons';
 import EmailModal from './EmailModal';
 
 const DashboardPage = ({ setPage, onLogout }) => {
@@ -28,6 +28,9 @@ const DashboardPage = ({ setPage, onLogout }) => {
               <li className="active"><a href="#"><FileIcon /> My Forms</a></li>
               <li><a href="#"><ChartIcon /> Analytics</a></li>
               <li><a href="#" onClick={handleAskTeamClick}><HelpIcon /> Ask Our Team</a></li>
+              {onLogout && (
+                <li><a href="#" onClick={(e) => { e.preventDefault(); onLogout(); }}><ArrowLeftIcon /> Logout</a></li>
+              )}
             </ul>
           </nav>
         </aside>

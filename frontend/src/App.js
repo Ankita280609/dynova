@@ -51,7 +51,7 @@ function App() {
       case 'features':
         return <AllFeaturesPage setCurrentPage={setCurrentPage} />;
       case 'dashboard':
-        return <DashboardPage setPage={setCurrentPage} />;
+        return <DashboardPage setPage={setCurrentPage} onLogout={handleLogout} />;
       case 'formEditor':
         return <FormEditorPage setPage={setCurrentPage} />;
       case 'aiChat':
