@@ -36,16 +36,13 @@ function App() {
     switch (currentPage) {
       case 'home':
         return (
-          <>
-            <Header isAuthenticated={isAuthenticated} onLogout={handleLogout} setPage={setCurrentPage} />
-            <main>
-              <Hero setPage={setCurrentPage} />
-              <Features />
-              <Timeline />
-              <VideoFeatureSection setCurrentPage={setCurrentPage} />
-              <HoverBarChart />
-            </main>
-          </>
+          <main>
+            <Hero setPage={setCurrentPage} />
+            <Features />
+            <Timeline />
+            <VideoFeatureSection setCurrentPage={setCurrentPage} />
+            <HoverBarChart />
+          </main>
         );
       case 'signIn':
         return <AuthPage initialState={'signIn'} setPage={setCurrentPage} onAuthSuccess={handleAuthSuccess} />;
@@ -66,6 +63,7 @@ function App() {
 
   return (
     <div className="App">
+      <Header isAuthenticated={isAuthenticated} onLogout={handleLogout} setPage={setCurrentPage} />
       {renderPage()}
 
       {/* Auth modal removed: sign-in / sign-up are full pages now */}
