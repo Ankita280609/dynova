@@ -11,6 +11,7 @@ import HoverBarChart from './components/HoverBarChart';
 import AllFeaturesPage from './components/AllFeaturesPage';
 import AuthPage from './components/AuthPage';
 import DashboardPage from './components/DashboardPage';
+import ProfilePage from './components/ProfilePage';
 import FormEditorPage from './components/FormEditorPage';
 import AiChatPage from './components/AiChatPage';
 
@@ -52,6 +53,8 @@ function App() {
         return <AllFeaturesPage setCurrentPage={setCurrentPage} />;
       case 'dashboard':
         return <DashboardPage setPage={setCurrentPage} onLogout={handleLogout} />;
+      case 'profile':
+        return <ProfilePage setPage={setCurrentPage} onLogout={handleLogout} />;
       case 'formEditor':
         return <FormEditorPage setPage={setCurrentPage} />;
       case 'aiChat':
