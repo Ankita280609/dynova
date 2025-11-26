@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-// Components (moved to separate files)
+// Components
 import Header from './components/Header';
 import Hero from './components/Hero';
 import Features from './components/Features';
@@ -19,6 +19,20 @@ function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // --- 1. NEW: Theme State (Default to 'dark') ---
+  const [theme, setTheme] = useState('dark');
+
+  // --- 2. NEW: Effect to apply the theme to the HTML body ---
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  // --- 3. NEW: The Toggle Function ---
+  const toggleTheme = () => {
+    setTheme((curr) => (curr === 'light' ? 'dark' : 'light'));
+  };
+
+  // Existing scroll effect
   useEffect(() => {
     if (currentPage !== 'home') window.scrollTo(0, 0);
   }, [currentPage]);
@@ -52,7 +66,7 @@ function App() {
       case 'features':
         return <AllFeaturesPage setCurrentPage={setCurrentPage} />;
       case 'dashboard':
-        return <DashboardPage setPage={setCurrentPage} onLogout={handleLogout} />;
+        return <DashboardPage setPage={setCurrentPage} onLogout={handleLogout} theme={theme} />;
       case 'profile':
         return <ProfilePage setPage={setCurrentPage} onLogout={handleLogout} />;
       case 'formEditor':
@@ -66,12 +80,20 @@ function App() {
 
   return (
     <div className="App">
+      {/* Pass theme & toggleTheme to Header so the button works.
+        (Header is only shown when NOT authenticated in your current logic) 
+      */}
       {!isAuthenticated && (
-        <Header isAuthenticated={isAuthenticated} onLogout={handleLogout} setPage={setCurrentPage} />
+        <Header 
+          isAuthenticated={isAuthenticated} 
+          onLogout={handleLogout} 
+          setPage={setCurrentPage} 
+          theme={theme}            // <--- Added
+          toggleTheme={toggleTheme} // <--- Added
+        />
       )}
+      
       {renderPage()}
-
-      {/* Auth modal removed: sign-in / sign-up are full pages now */}
     </div>
   );
 }
