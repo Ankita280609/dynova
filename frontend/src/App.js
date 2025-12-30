@@ -1,5 +1,12 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+  useLocation,
+} from 'react-router-dom';
 import './App.css';
 
 // Components
@@ -18,11 +25,11 @@ import FormViewerPage from './components/FormViewerPage';
 import AnalyticsDashboardPage from './components/AnalyticsDashboardPage';
 import AiChatPage from './components/AiChatPage';
 
-// Wrapper for the Home page content
-function HomePage({ setPage }) {
-  // We pass a dummy setPage for components that might still rely on it for internal links
-  // Ideally we should refactor them to use Link or useNavigate, but for now we bridge it.
+/* ---------------- HOME PAGE ---------------- */
+
+function HomePage() {
   const navigate = useNavigate();
+
   const bridgeSetPage = (page) => {
     if (page === 'signIn') navigate('/signin');
     if (page === 'signUp') navigate('/signup');
@@ -41,18 +48,21 @@ function HomePage({ setPage }) {
   );
 }
 
-// Wrapper for Header to use router hooks
-function AppHeader({ isAuthenticated, onLogout }) {
+/* ---------------- HEADER WRAPPER ---------------- */
+
+function AppHeader({ isAuthenticated, onLogout, theme, toggleTheme }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Hide header on viewer page or if needed
+  // Hide header on form viewer page
   if (location.pathname.startsWith('/forms/view/')) return null;
 
   return (
     <Header
       isAuthenticated={isAuthenticated}
       onLogout={onLogout}
+      theme={theme}
+      toggleTheme={toggleTheme}
       setPage={(page) => {
         if (page === 'home') navigate('/');
         if (page === 'signIn') navigate('/signin');
@@ -64,11 +74,22 @@ function AppHeader({ isAuthenticated, onLogout }) {
   );
 }
 
-function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+/* ---------------- MAIN APP ---------------- */
 
-  // Optional: Check token validity on mount (for now just trust presence)
-  // useEffect(() => { ... }, []);
+function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    !!localStorage.getItem('token')
+  );
+
+  const [theme, setTheme] = useState('dark');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
 
   const handleAuthSuccess = (token, user) => {
     localStorage.setItem('token', token);
@@ -85,34 +106,76 @@ function App() {
   return (
     <Router>
       <div className="App">
-        <AppHeader isAuthenticated={isAuthenticated} onLogout={handleLogout} />
+        <AppHeader
+          isAuthenticated={isAuthenticated}
+          onLogout={handleLogout}
+          theme={theme}
+          toggleTheme={toggleTheme}
+        />
 
         <Routes>
           <Route path="/" element={<HomePage />} />
+
           <Route
             path="/signin"
-            element={isAuthenticated ? <Navigate to="/dashboard" /> : <AuthPage initialState="signIn" onAuthSuccess={handleAuthSuccess} />}
+            element={
+              isAuthenticated ? (
+                <Navigate to="/dashboard" />
+              ) : (
+                <AuthPage
+                  initialState="signIn"
+                  onAuthSuccess={handleAuthSuccess}
+                />
+              )
+            }
           />
+
           <Route
             path="/signup"
-            element={isAuthenticated ? <Navigate to="/dashboard" /> : <AuthPage initialState="signUp" onAuthSuccess={handleAuthSuccess} />}
+            element={
+              isAuthenticated ? (
+                <Navigate to="/dashboard" />
+              ) : (
+                <AuthPage
+                  initialState="signUp"
+                  onAuthSuccess={handleAuthSuccess}
+                />
+              )
+            }
           />
+
           <Route path="/features" element={<AllFeaturesPage />} />
 
           <Route
             path="/dashboard"
-            element={isAuthenticated ? <DashboardPage onLogout={handleLogout} /> : <Navigate to="/signin" />}
+            element={
+              isAuthenticated ? (
+                <DashboardPage onLogout={handleLogout} theme={theme} />
+              ) : (
+                <Navigate to="/signin" />
+              )
+            }
           />
+
           <Route
             path="/profile"
-            element={isAuthenticated ? <ProfilePage onLogout={handleLogout} /> : <Navigate to="/signin" />}
+            element={
+              isAuthenticated ? (
+                <ProfilePage onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/signin" />
+              )
+            }
           />
 
           {/* Form Routes */}
           <Route path="/forms/new" element={<FormEditorPage />} />
           <Route path="/forms/:id/edit" element={<FormEditorPage />} />
           <Route path="/forms/:id" element={<FormViewerPage />} />
-          <Route path="/forms/:id/analytics" element={<AnalyticsDashboardPage />} />
+          <Route
+            path="/forms/:id/analytics"
+            element={<AnalyticsDashboardPage />}
+          />
 
           <Route path="/aichat" element={<AiChatPage />} />
 
