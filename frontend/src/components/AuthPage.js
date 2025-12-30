@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 
 function SignUpForm({ switchToSignIn, onAuthSuccess }) {
     const navigate = useNavigate();
@@ -22,7 +23,7 @@ function SignUpForm({ switchToSignIn, onAuthSuccess }) {
         }
 
         try {
-            const res = await fetch('http://localhost:5001/api/auth/signup', {
+            const res = await fetch(`${API_BASE_URL}/auth/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: username, email, password })
@@ -76,7 +77,7 @@ function SignInForm({ switchToSignUp, onAuthSuccess }) {
         const password = e.target['signin-password'].value;
 
         try {
-            const res = await fetch('http://localhost:5001/api/auth/signin', {
+            const res = await fetch(`${API_BASE_URL}/auth/signin`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })

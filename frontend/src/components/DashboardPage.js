@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Logo, FileIcon, ChartIcon, HelpIcon, SearchIcon, BellIcon, PlusIcon, BarChartIcon, MoreHorizontalIcon, AiBotIcon, ArrowRightIcon, StarIcon } from './Icons';
 import EmailModal from './EmailModal';
+import { API_BASE_URL } from '../config';
 
 const DashboardPage = ({ onLogout }) => {
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ const DashboardPage = ({ onLogout }) => {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const res = await fetch('http://localhost:5001/api/auth/me', {
+        const res = await fetch(`${API_BASE_URL}/auth/me`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -45,9 +46,9 @@ const DashboardPage = ({ onLogout }) => {
     if (!token) return;
 
     try {
-      let url = 'http://localhost:5001/api/forms';
+      let url = `${API_BASE_URL}/forms`;
       if (activeTab === 'bookmarked') {
-        url = 'http://localhost:5001/api/forms/bookmarked';
+        url = `${API_BASE_URL}/forms/bookmarked`;
       }
 
       const res = await fetch(url, {
@@ -78,7 +79,7 @@ const DashboardPage = ({ onLogout }) => {
     setBookmarkedIds(newBookmarks);
 
     try {
-      const res = await fetch(`http://localhost:5001/api/forms/${formId}/bookmark`, {
+      const res = await fetch(`${API_BASE_URL}/forms/${formId}/bookmark`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
