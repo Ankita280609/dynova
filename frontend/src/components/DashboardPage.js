@@ -1,34 +1,138 @@
-import React, { useState } from 'react';
-import { Logo, FileIcon, ChartIcon, HelpIcon, SearchIcon, BellIcon, PlusIcon, BarChartIcon, MoreHorizontalIcon, AiBotIcon, ArrowRightIcon, ArrowLeftIcon } from './Icons';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Logo, FileIcon, ChartIcon, HelpIcon, SearchIcon, BellIcon, PlusIcon, BarChartIcon, MoreHorizontalIcon, AiBotIcon, ArrowRightIcon, StarIcon } from './Icons';
 import EmailModal from './EmailModal';
 
-const DashboardPage = ({ setPage, onLogout }) => {
+const DashboardPage = ({ onLogout }) => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('active');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [forms, setForms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [user, setUser] = useState(null);
+  const [bookmarkedIds, setBookmarkedIds] = useState([]);
 
-  const forms = [
-    { id: 1, title: 'Customer Feedback Survey', updated: '2 days ago', submissions: 128 },
-    { id: 2, title: 'Event Registration Form', updated: '1 week ago', submissions: 312 },
-    { id: 3, title: 'Website Contact Form', updated: '3 weeks ago', submissions: 88 },
-  ];
+  useEffect(() => {
+    fetchUserData();
+    fetchForms();
+  }, [activeTab]);
+
+  const fetchUserData = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const res = await fetch('http://localhost:5001/api/auth/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const userData = await res.json();
+          setUser(userData);
+          // userData.bookmarks should be an array of IDs
+          setBookmarkedIds(userData.bookmarks || []);
+          // Update local storage to keep it fresh (optional)
+          localStorage.setItem('user', JSON.stringify(userData));
+        }
+      } catch (e) {
+        console.error("Failed to fetch user", e);
+      }
+    }
+  };
+
+  const fetchForms = async () => {
+    setLoading(true);
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      let url = 'http://localhost:5001/api/forms';
+      if (activeTab === 'bookmarked') {
+        url = 'http://localhost:5001/api/forms/bookmarked';
+      }
+
+      const res = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to fetch forms');
+      const data = await res.json();
+      setForms(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBookmark = async (e, formId) => {
+    e.stopPropagation();
+    const token = localStorage.getItem('token');
+
+    // Optimistic update
+    const isCurrentlyBookmarked = bookmarkedIds.includes(formId);
+    let newBookmarks = [...bookmarkedIds];
+    if (isCurrentlyBookmarked) {
+      newBookmarks = newBookmarks.filter(id => id !== formId);
+    } else {
+      newBookmarks.push(formId);
+    }
+    setBookmarkedIds(newBookmarks);
+
+    try {
+      const res = await fetch(`http://localhost:5001/api/forms/${formId}/bookmark`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // Backend returns the full updated bookmarks array usually
+        if (data.bookmarks) setBookmarkedIds(data.bookmarks);
+
+        // If we are in "Bookmarked" tab and we removed it, we should maybe remove it from the list
+        if (activeTab === 'bookmarked' && isCurrentlyBookmarked) {
+          setForms(prev => prev.filter(f => f._id !== formId));
+        }
+      } else {
+        // Revert on failure
+        setBookmarkedIds(bookmarkedIds);
+      }
+    } catch (err) {
+      console.error(err);
+      setBookmarkedIds(bookmarkedIds);
+    }
+  };
 
   const handleAskTeamClick = (e) => {
     e.preventDefault();
     setIsModalOpen(true);
   };
 
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+  };
+
+  const filteredForms = forms.filter(form =>
+    form.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <>
       <div className="dashboard-layout page-fade-in">
         <aside className="dashboard-sidebar">
           <div className="sidebar-logo"><Logo />dynova</div>
-          <div className="sidebar-user"><div className="user-avatar">AV</div><span className="user-name">Alex Volkov</span></div>
+          <div className="sidebar-user">
+            <div className="user-avatar">{getInitials(user?.name)}</div>
+            <span className="user-name">{user?.name || 'User'}</span>
+          </div>
           <nav className="sidebar-nav">
             <ul>
               <li className="active"><a href="#"><FileIcon /> My Forms</a></li>
               <li><a href="#"><ChartIcon /> Analytics</a></li>
               <li><a href="#" onClick={handleAskTeamClick}><HelpIcon /> Ask Our Team</a></li>
-              <li><a href="#" onClick={(e) => { e.preventDefault(); setPage && setPage('profile'); }}>Profile</a></li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); navigate('/profile'); }}>Profile</a></li>
             </ul>
           </nav>
         </aside>
@@ -37,11 +141,19 @@ const DashboardPage = ({ setPage, onLogout }) => {
           <header className="dashboard-header">
             <div className="header-left">
               <h2>My Forms</h2>
-              <div className="search-bar"><SearchIcon /><input type="text" placeholder="Search forms..." /></div>
+              <div className="search-bar">
+                <SearchIcon />
+                <input
+                  type="text"
+                  placeholder="Search forms..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
             </div>
             <div className="header-right">
               <button className="notification-btn"><BellIcon /></button>
-              <button className="btn-create-form" onClick={() => setPage && setPage('formEditor')}><PlusIcon /> Create New Form</button>
+              <button className="btn-create-form" onClick={() => navigate('/forms/new')}><PlusIcon /> Create New Form</button>
               {onLogout && (
                 <button className="btn-logout" onClick={onLogout}>Logout</button>
               )}
@@ -55,21 +167,31 @@ const DashboardPage = ({ setPage, onLogout }) => {
           </div>
 
           <div className="form-grid">
-            {forms.map(form => (
-              <div className="form-card" key={form.id}>
-                <div className={`form-card-thumbnail thumb-${form.id}`}></div>
-                <div className="form-card-content">
-                  <h3>{form.title}</h3>
-                  <p>Last updated: {form.updated}</p>
-                  <p>{form.submissions} Submissions</p>
-                  <div className="form-card-actions">
-                    <button className="btn-card-view" onClick={() => setPage && setPage('formEditor')}>View</button>
-                    <button className="btn-card-icon"><BarChartIcon /></button>
-                    <button className="btn-card-icon"><MoreHorizontalIcon /></button>
+            {loading ? (
+              <p>Loading forms...</p>
+            ) : filteredForms.length === 0 ? (
+              <div className="empty-state">
+                <p>No forms found. Create one to get started!</p>
+              </div>
+            ) : (
+              filteredForms.map(form => (
+                <div className="form-card" key={form._id} onClick={() => navigate(`/forms/${form._id}/edit`)}>
+                  <div className={`form-card-thumbnail thumb-${(form._id.charCodeAt(0) % 3) + 1}`}></div>
+                  <div className="form-card-content">
+                    <h3>{form.title}</h3>
+                    <p>Last updated: {new Date(form.updatedAt).toLocaleDateString()}</p>
+                    <p>{form._count?.responses || 0} Submissions</p>
+                    <div className="form-card-actions">
+                      <button className="btn-card-view" onClick={(e) => { e.stopPropagation(); navigate(`/forms/${form._id}/edit`); }}>View</button>
+                      <button className="btn-card-icon" onClick={(e) => { e.stopPropagation(); navigate(`/forms/${form._id}/analytics`); }}><BarChartIcon /></button>
+                      <button className="btn-card-icon" onClick={(e) => handleBookmark(e, form._id)}>
+                        <StarIcon filled={bookmarkedIds.includes(form._id)} />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
           <section className="ai-bot-section">
@@ -78,7 +200,7 @@ const DashboardPage = ({ setPage, onLogout }) => {
               <h2>Let AI Build Your Form Smarter</h2>
               <p>Let our AI bot help you brainstorm the right questions for your form in seconds.</p>
             </div>
-            <button className="btn-try-now" onClick={() => setPage && setPage('aiChat')}>Try Now <ArrowRightIcon /></button>
+            <button className="btn-try-now" onClick={() => navigate('/aichat')}>Try Now <ArrowRightIcon /></button>
           </section>
         </main>
       </div>
