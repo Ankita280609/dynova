@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line } from 'recharts';
 import './FormEditorPage.css';
 import { API_BASE_URL } from '../config';
 
@@ -21,7 +21,7 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
     const [responses, setResponses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [chartTypes, setChartTypes] = useState({});
-    const [activeTab, setActiveTab] = useState('summary'); // 'summary' | 'responses'
+    const [activeTab, setActiveTab] = useState('responses'); // 'summary' | 'responses'
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
@@ -70,7 +70,7 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
         );
         const totalAnswered = allAnswers.length;
 
-        if (['shortText', 'nameField', 'emailField', 'phoneField', 'websiteField'].includes(question.type)) {
+        if (['shortText', 'nameField', 'emailField', 'phoneField', 'websiteField', 'addressField', 'longText'].includes(question.type)) {
             return {
                 type: 'text',
                 total: totalAnswered,
@@ -78,19 +78,27 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
             };
         }
 
-        if (['numberField', 'decimalField', 'currencyField'].includes(question.type)) {
+        if (['numberField', 'decimalField', 'currencyField', 'starRating'].includes(question.type)) {
             const values = allAnswers.map(a => parseFloat(a.value)).filter(v => !isNaN(v));
             const sum = values.reduce((a, b) => a + b, 0);
             const avg = values.length ? (sum / values.length).toFixed(2) : 0;
+
+            // Histogram / Frequency Distribution
+            const counts = {};
+            values.forEach(v => counts[v] = (counts[v] || 0) + 1);
+            const data = Object.entries(counts).map(([name, value]) => ({ name: String(name), value }));
+
             return {
-                type: 'number',
+                type: 'number_chart', // New type combining stats + chart
                 total: totalAnswered,
                 avg,
                 min: values.length ? Math.min(...values) : 0,
-                max: values.length ? Math.max(...values) : 0
+                max: values.length ? Math.max(...values) : 0,
+                data
             };
         }
 
+        // Choice based questions (Radio, Select, etc)
         const counts = {};
         allAnswers.forEach(a => {
             const val = a.value;
@@ -232,6 +240,29 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
                             </div>
                         </div>
 
+                        {/* ACTIVITY GRAPH */}
+                        <div className="question-card" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginBottom: '30px', padding: '25px' }}>
+                            <h3 style={{ color: 'var(--text-white)', marginBottom: '20px' }}>📈 Response Activity</h3>
+                            <div style={{ width: '100%', height: 300 }}>
+                                <ResponsiveContainer>
+                                    <LineChart data={(() => {
+                                        const activity = {};
+                                        responses.forEach(r => {
+                                            const d = new Date(r.submittedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                                            activity[d] = (activity[d] || 0) + 1;
+                                        });
+                                        return Object.entries(activity).map(([date, count]) => ({ date, count }));
+                                    })()}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
+                                        <XAxis dataKey="date" stroke="var(--text-medium)" fontSize={12} />
+                                        <YAxis allowDecimals={false} stroke="var(--text-medium)" fontSize={12} />
+                                        <Tooltip contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-white)' }} />
+                                        <Line type="monotone" dataKey="count" stroke="#8A4FFF" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 8 }} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+
                         {/* QUESTIONS LIST */}
                         <div className="analytics-questions-list">
                             {form.questions.map((q, idx) => {
@@ -257,15 +288,29 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
                                             </div>
                                         )}
 
-                                        {stats.type === 'number' && (
-                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
-                                                {['avg', 'min', 'max'].map(k => (
-                                                    <div key={k} style={{ background: 'var(--bg-app)', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
-                                                        <div style={{ color: 'var(--text-medium)', fontSize: '12px', textTransform: 'capitalize' }}>{k}</div>
-                                                        <div style={{ color: 'var(--text-white)', fontSize: '20px', fontWeight: 'bold' }}>{stats[k]}</div>
-                                                    </div>
-                                                ))}
-                                            </div>
+                                        {stats.type === 'number_chart' && (
+                                            <>
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginBottom: '20px' }}>
+                                                    {['avg', 'min', 'max'].map(k => (
+                                                        <div key={k} style={{ background: 'var(--bg-app)', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+                                                            <div style={{ color: 'var(--text-medium)', fontSize: '12px', textTransform: 'capitalize' }}>{k}</div>
+                                                            <div style={{ color: 'var(--text-white)', fontSize: '20px', fontWeight: 'bold' }}>{stats[k]}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <div style={{ width: '100%', height: 250 }}>
+                                                    <h5 style={{ color: 'var(--text-medium)', marginBottom: '10px' }}>Distribution</h5>
+                                                    <ResponsiveContainer>
+                                                        <BarChart data={stats.data}>
+                                                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
+                                                            <XAxis dataKey="name" stroke="var(--text-medium)" fontSize={12} />
+                                                            <YAxis allowDecimals={false} stroke="var(--text-medium)" fontSize={12} />
+                                                            <Tooltip contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-white)' }} />
+                                                            <Bar dataKey="value" fill="#8A4FFF" radius={[4, 4, 0, 0]} />
+                                                        </BarChart>
+                                                    </ResponsiveContainer>
+                                                </div>
+                                            </>
                                         )}
 
                                         {stats.type === 'chart' && (
@@ -351,6 +396,6 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }
