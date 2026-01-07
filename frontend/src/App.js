@@ -174,10 +174,10 @@ function App() {
           <Route path="/forms/new" element={<FormEditorPage />} />
           <Route path="/forms/:id/edit" element={<FormEditorPage />} />
           <Route path="/forms/:id" element={<FormViewerPage />} />
-          <Route path="/analytics" element={<AnalyticsDashboardPage theme={theme} toggleTheme={toggleTheme} />} />
+          <Route path="/analytics" element={<AnalyticsDashboardPage />} />
           <Route
             path="/forms/:id/analytics"
-            element={<AnalyticsDashboardPage theme={theme} toggleTheme={toggleTheme} />}
+            element={<AnalyticsDashboardPage />}
           />
 
           <Route path="/aichat" element={<AiChatPage />} />

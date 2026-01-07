@@ -6,7 +6,7 @@ import { API_BASE_URL } from '../config';
 
 const COLORS = ['#B292F2', '#8A4FFF', '#D6C6F6', '#6AAA64', '#FFBB28', '#FF8042', '#0088FE', '#00C49F'];
 
-export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
+export default function AnalyticsDashboardPage() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [form, setForm] = useState(null);
@@ -14,9 +14,6 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
     const [responses, setResponses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [chartTypes, setChartTypes] = useState({}); // Stores 'bar' or 'pie' for each question
-
-    const [activeTab, setActiveTab] = useState('summary'); // 'summary' or 'responses'
-    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -26,6 +23,7 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
         }
 
         if (id) {
+            // Fetch specific form analytics
             setLoading(true);
             Promise.all([
                 fetch(`${API_BASE_URL}/forms/${id}`).then(res => res.json()),
@@ -41,6 +39,7 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
                 setLoading(false);
             });
         } else {
+            // Fetch all forms for the list view
             setLoading(true);
             fetch(`${API_BASE_URL}/forms`, {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -58,25 +57,26 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
     }, [id, navigate]);
 
     const getQuestionStats = (question) => {
-        // Correctly get answers for this specific question from all responses
-        const allAnswers = responses
-            .map(r => (r.answers || []).find(a => a.questionId === question.id))
-            .filter(Boolean);
-
+        const allAnswers = responses.flatMap(r => (r.answers || []).filter(a => a.questionId === qId(a, question.id)));
         const totalAnswered = allAnswers.length;
 
-        if (['shortText', 'nameField', 'emailField', 'phoneField', 'websiteField', 'longText', 'addressField'].includes(question.type)) {
+        // Helper to match question ID (handles some schema variations if legacy)
+        function qId(answer, targetId) {
+            return answer.questionId || answer.id;
+        }
+
+        if (['shortText', 'nameField', 'emailField', 'phoneField', 'websiteField'].includes(question.type)) {
             return {
                 type: 'text',
                 total: totalAnswered,
-                latest: allAnswers.map(a => a.value).filter(Boolean).slice(0, 10)
+                latest: allAnswers.slice(0, 5).map(a => a.value)
             };
         }
 
-        if (['numberField', 'decimalField', 'currencyField', 'starRating', 'sliderScale', 'moodMeter'].includes(question.type)) {
+        if (['numberField', 'decimalField', 'currencyField'].includes(question.type)) {
             const values = allAnswers.map(a => parseFloat(a.value)).filter(v => !isNaN(v));
             const sum = values.reduce((a, b) => a + b, 0);
-            const avg = values.length ? (sum / values.length).toFixed(1) : 0;
+            const avg = values.length ? (sum / values.length).toFixed(2) : 0;
             return {
                 type: 'number',
                 total: totalAnswered,
@@ -90,23 +90,26 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
         allAnswers.forEach(a => {
             const val = a.value;
             if (Array.isArray(val)) {
-                val.forEach(v => { if (v) counts[v] = (counts[v] || 0) + 1; });
+                val.forEach(v => counts[v] = (counts[v] || 0) + 1);
             } else if (val) {
                 counts[val] = (counts[val] || 0) + 1;
             }
         });
 
-        const data = Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+        const data = Object.entries(counts).map(([name, value]) => ({ name, value }));
         return { type: 'chart', total: totalAnswered, data };
     };
+
     const getAIInsights = () => {
         if (responses.length === 0) return "Not enough data yet for AI insights.";
+
         const insights = [
             `High engagement observed: ${responses.length} users have shared their feedback.`,
             "Most users are completing the form in under 2 minutes.",
             "Trend analysis shows a peak in submissions during evening hours.",
             "Key demographic insights: users show high interest in the 'Pro' features mentioned."
         ];
+
         return insights[Math.floor(Math.random() * insights.length)];
     };
 
@@ -127,15 +130,6 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
                     <div className="editor-header-left">
                         <button onClick={() => navigate('/dashboard')} className="btn-icon-back">← Dashboard</button>
                         <h2 style={{ margin: 0, color: '#B292F2' }}>Analytics Dashboard</h2>
-                    </div>
-                    <div className="editor-header-right" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <button onClick={toggleTheme} className="btn-theme-toggle" title="Toggle Theme" style={{ background: 'none', border: 'none', color: 'inherit', padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                            {theme === 'dark' ? (
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                            ) : (
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                            )}
-                        </button>
                     </div>
                 </header>
                 <div className="form-editor-main" style={{ padding: '40px', overflowY: 'auto', display: 'block' }}>
@@ -167,214 +161,125 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
                     <button onClick={() => navigate('/analytics')} className="btn-icon-back">← Back to List</button>
                     <h2 style={{ margin: 0, color: '#B292F2' }}>{form.title}</h2>
                 </div>
-                <div className="editor-header-right" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <button onClick={toggleTheme} className="btn-theme-toggle" title="Toggle Theme" style={{ background: 'none', border: 'none', color: 'inherit', padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                        {theme === 'dark' ? (
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                        ) : (
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                        )}
-                    </button>
+                <div className="editor-header-right">
                     <span style={{ color: '#6aaa64', fontWeight: 'bold' }}>Live Analytics</span>
                 </div>
             </header>
 
             <div className="form-editor-main" style={{ flexDirection: 'column', overflowY: 'auto', padding: '30px' }}>
 
-                {/* TABS SELECTION */}
-                <div style={{ display: 'flex', gap: '2px', background: '#111', padding: '4px', borderRadius: '10px', width: 'fit-content', marginBottom: '25px', border: '1px solid #222' }}>
-                    <button
-                        onClick={() => setActiveTab('summary')}
-                        style={{
-                            padding: '8px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: '600',
-                            background: activeTab === 'summary' ? '#A067E4' : 'transparent',
-                            color: activeTab === 'summary' ? 'white' : '#777'
-                        }}
-                    >Summary View</button>
-                    <button
-                        onClick={() => setActiveTab('responses')}
-                        style={{
-                            padding: '8px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: '600',
-                            background: activeTab === 'responses' ? '#A067E4' : 'transparent',
-                            color: activeTab === 'responses' ? 'white' : '#777'
-                        }}
-                    >Individual Responses</button>
+                {/* AI INSIGHTS BOX */}
+                <div className="question-card" style={{ background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)', border: '1px solid #A067E4', marginBottom: '30px' }}>
+                    <h3 style={{ color: '#B292F2', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        ✨ AI Insights
+                    </h3>
+                    <p style={{ color: 'white', fontSize: '16px', lineHeight: '1.6' }}>{insights}</p>
                 </div>
 
-                {activeTab === 'summary' ? (
-                    <>
-                        {/* AI INSIGHTS BOX */}
-                        <div className="question-card" style={{ background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)', border: '1px solid #A067E4', marginBottom: '30px' }}>
-                            <h3 style={{ color: '#B292F2', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                ✨ AI Insights
-                            </h3>
-                            <p style={{ color: 'white', fontSize: '16px', lineHeight: '1.6' }}>{insights}</p>
-                        </div>
-
-                        <div className="analytics-summary-card" style={{ display: 'flex', gap: '20px', marginBottom: '30px' }}>
-                            <div className="stat-box" style={{ flex: 1, background: '#1a1a1a', padding: '20px', borderRadius: '12px', border: '1px solid #333' }}>
-                                <h3 style={{ color: '#aaa', fontSize: '14px', marginBottom: '5px' }}>Total Responses</h3>
-                                <div className="stat-value" style={{ color: 'white', fontSize: '32px', fontWeight: 'bold' }}>{responses.length}</div>
-                            </div>
-                            <div className="stat-box" style={{ flex: 1, background: '#1a1a1a', padding: '20px', borderRadius: '12px', border: '1px solid #333' }}>
-                                <h3 style={{ color: '#aaa', fontSize: '14px', marginBottom: '5px' }}>Completion Rate</h3>
-                                <div className="stat-value" style={{ color: 'white', fontSize: '32px', fontWeight: 'bold' }}>100%</div>
-                            </div>
-                        </div>
-
-                        <div className="analytics-questions-list">
-                            {form.questions.map((q, idx) => {
-                                const stats = getQuestionStats(q);
-                                if (q.type === 'descriptionText' || q.type === 'embeddedMedia') return null;
-                                const cType = chartTypes[q.id] || (['singleSelect', 'radio', 'multiSelect', 'dropdown', 'imageChoice'].includes(q.type) ? 'pie' : 'bar');
-
-                                return (
-                                    <div key={q.id} className="question-card" style={{ background: '#1a1a1a', border: '1px solid #222', marginBottom: '30px', padding: '25px' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
-                                            <h4 style={{ color: 'white', margin: 0 }}>{idx + 1}. {q.label}</h4>
-                                            <span style={{ color: '#666', fontSize: '12px' }}>{stats.total} responses</span>
-                                        </div>
-
-                                        {stats.type === 'text' && (
-                                            <div className="text-answers" style={{ marginTop: '10px' }}>
-                                                <h5 style={{ color: '#B292F2', marginBottom: '10px' }}>Latest Answers:</h5>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                    {stats.latest.map((ans, i) => (
-                                                        <div key={i} style={{ background: '#0a0a0a', padding: '10px 15px', borderRadius: '6px', color: '#ccc', fontSize: '14px' }}>
-                                                            {String(ans)}
-                                                        </div>
-                                                    ))}
-                                                    {stats.latest.length === 0 && <p style={{ color: '#444' }}>No data yet</p>}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {stats.type === 'number' && (
-                                            <div className="number-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginTop: '15px' }}>
-                                                <div style={{ background: '#0a0a0a', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
-                                                    <div style={{ color: '#666', fontSize: '12px' }}>Average</div>
-                                                    <div style={{ color: 'white', fontSize: '20px', fontWeight: 'bold' }}>{stats.avg}</div>
-                                                </div>
-                                                <div style={{ background: '#0a0a0a', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
-                                                    <div style={{ color: '#666', fontSize: '12px' }}>Min</div>
-                                                    <div style={{ color: 'white', fontSize: '20px', fontWeight: 'bold' }}>{stats.min}</div>
-                                                </div>
-                                                <div style={{ background: '#0a0a0a', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
-                                                    <div style={{ color: '#666', fontSize: '12px' }}>Max</div>
-                                                    <div style={{ color: 'white', fontSize: '20px', fontWeight: 'bold' }}>{stats.max}</div>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {stats.type === 'chart' && (
-                                            <>
-                                                <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                                                    <button
-                                                        onClick={() => setChartTypes(p => ({ ...p, [q.id]: 'bar' }))}
-                                                        style={{ background: cType === 'bar' ? '#B292F2' : '#333', border: 'none', color: 'white', padding: '4px 12px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', transition: '0.2s' }}
-                                                    >Bar Chart</button>
-                                                    <button
-                                                        onClick={() => setChartTypes(p => ({ ...p, [q.id]: 'pie' }))}
-                                                        style={{ background: cType === 'pie' ? '#B292F2' : '#333', border: 'none', color: 'white', padding: '4px 12px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', transition: '0.2s' }}
-                                                    >Pie Chart</button>
-                                                </div>
-                                                <div style={{ width: '100%', height: 300, background: '#0a0a0a', borderRadius: '8px', padding: '15px' }}>
-                                                    <ResponsiveContainer>
-                                                        {cType === 'bar' ? (
-                                                            <BarChart data={stats.data}>
-                                                                <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-                                                                <XAxis dataKey="name" stroke="#666" fontSize={10} tick={{ fill: '#888' }} />
-                                                                <YAxis allowDecimals={false} stroke="#666" fontSize={12} tick={{ fill: '#888' }} />
-                                                                <Tooltip contentStyle={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }} />
-                                                                <Bar dataKey="value" fill="#B292F2" radius={[4, 4, 0, 0]} />
-                                                            </BarChart>
-                                                        ) : (
-                                                            <PieChart>
-                                                                <Pie
-                                                                    data={stats.data}
-                                                                    cx="50%"
-                                                                    cy="50%"
-                                                                    innerRadius={60}
-                                                                    outerRadius={80}
-                                                                    fill="#8884d8"
-                                                                    paddingAngle={5}
-                                                                    dataKey="value"
-                                                                >
-                                                                    {stats.data.map((entry, index) => (
-                                                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                                                    ))}
-                                                                </Pie>
-                                                                <Tooltip contentStyle={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }} />
-                                                                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                                                            </PieChart>
-                                                        )}
-                                                    </ResponsiveContainer>
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </>
-                ) : (
-                    /* INDIVIDUAL RESPONSES VIEW (TABULAR) */
-                    <div className="question-card" style={{ background: '#1a1a1a', border: '1px solid #222', padding: '0', overflow: 'hidden' }}>
-                        <div style={{ padding: '20px', borderBottom: '1px solid #222', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <h3 style={{ color: 'white', margin: 0 }}>Response Spreadsheet</h3>
-                            <div style={{ display: 'flex', gap: '10px' }}>
-                                <input
-                                    type="text"
-                                    placeholder="Search responses..."
-                                    className="viewer-input"
-                                    style={{ width: '200px', fontSize: '13px', padding: '6px 12px' }}
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                                <button className="btn-editor-publish" style={{ padding: '6px 15px', fontSize: '13px' }}>Export CSV</button>
-                            </div>
-                        </div>
-                        <div style={{ overflowX: 'auto', maxHeight: '600px' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', color: '#ccc', fontSize: '14px' }}>
-                                <thead style={{ position: 'sticky', top: 0, background: '#222', zIndex: 5 }}>
-                                    <tr>
-                                        <th style={{ padding: '15px', borderRight: '1px solid #333', borderBottom: '2px solid #444', textAlign: 'left', width: '180px' }}>Submitted At</th>
-                                        {form.questions.map(q => (
-                                            <th key={q.id} style={{ padding: '15px', borderRight: '1px solid #333', borderBottom: '2px solid #444', textAlign: 'left', minWidth: '150px' }}>
-                                                {q.label}
-                                            </th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {responses.filter(r => JSON.stringify(r).toLowerCase().includes(searchTerm.toLowerCase())).map((res, ridx) => (
-                                        <tr key={res._id} style={{ borderBottom: '1px solid #333', background: ridx % 2 === 0 ? 'transparent' : '#141414' }}>
-                                            <td style={{ padding: '15px', borderRight: '1px solid #333', color: '#666', fontSize: '12px' }}>
-                                                {new Date(res.submittedAt).toLocaleString()}
-                                            </td>
-                                            {form.questions.map(q => {
-                                                const ans = (res.answers || []).find(a => a.questionId === q.id);
-                                                const val = ans ? (Array.isArray(ans.value) ? ans.value.join(', ') : String(ans.value)) : '-';
-                                                return (
-                                                    <td key={q.id} style={{ padding: '15px', borderRight: '1px solid #333' }}>
-                                                        {val}
-                                                    </td>
-                                                );
-                                            })}
-                                        </tr>
-                                    ))}
-                                    {responses.length === 0 && (
-                                        <tr>
-                                            <td colSpan={form.questions.length + 1} style={{ padding: '40px', textAlign: 'center', color: '#555' }}>
-                                                No responses collected yet.
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                <div className="analytics-summary-card" style={{ display: 'flex', gap: '20px', marginBottom: '30px' }}>
+                    <div className="stat-box" style={{ flex: 1, background: '#1a1a1a', padding: '20px', borderRadius: '12px', border: '1px solid #333' }}>
+                        <h3 style={{ color: '#aaa', fontSize: '14px', marginBottom: '5px' }}>Total Responses</h3>
+                        <div className="stat-value" style={{ color: 'white', fontSize: '32px', fontWeight: 'bold' }}>{responses.length}</div>
                     </div>
-                )}
+                    <div className="stat-box" style={{ flex: 1, background: '#1a1a1a', padding: '20px', borderRadius: '12px', border: '1px solid #333' }}>
+                        <h3 style={{ color: '#aaa', fontSize: '14px', marginBottom: '5px' }}>Completion Rate</h3>
+                        <div className="stat-value" style={{ color: 'white', fontSize: '32px', fontWeight: 'bold' }}>100%</div>
+                    </div>
+                </div>
+
+                <div className="analytics-questions-list">
+                    {form.questions.map((q, idx) => {
+                        const stats = getQuestionStats(q);
+                        const cType = chartTypes[q.id] || 'bar';
+
+                        return (
+                            <div key={q.id} className="question-card" style={{ background: '#1a1a1a', border: '1px solid #222', marginBottom: '30px', padding: '25px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
+                                    <h4 style={{ color: 'white', margin: 0 }}>{idx + 1}. {q.label}</h4>
+                                    <span style={{ color: '#666', fontSize: '12px' }}>{stats.total} responses</span>
+                                </div>
+
+                                {stats.type === 'text' && (
+                                    <div className="text-answers" style={{ marginTop: '10px' }}>
+                                        <h5 style={{ color: '#B292F2', marginBottom: '10px' }}>Sample Answers:</h5>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            {stats.latest.map((ans, i) => (
+                                                <div key={i} style={{ background: '#0a0a0a', padding: '10px 15px', borderRadius: '6px', color: '#ccc', fontSize: '14px' }}>
+                                                    {ans}
+                                                </div>
+                                            ))}
+                                            {stats.latest.length === 0 && <p style={{ color: '#444' }}>No data yet</p>}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {stats.type === 'number' && (
+                                    <div className="number-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginTop: '15px' }}>
+                                        <div style={{ background: '#0a0a0a', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+                                            <div style={{ color: '#666', fontSize: '12px' }}>Average</div>
+                                            <div style={{ color: 'white', fontSize: '20px', fontWeight: 'bold' }}>{stats.avg}</div>
+                                        </div>
+                                        <div style={{ background: '#0a0a0a', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+                                            <div style={{ color: '#666', fontSize: '12px' }}>Min</div>
+                                            <div style={{ color: 'white', fontSize: '20px', fontWeight: 'bold' }}>{stats.min}</div>
+                                        </div>
+                                        <div style={{ background: '#0a0a0a', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+                                            <div style={{ color: '#666', fontSize: '12px' }}>Max</div>
+                                            <div style={{ color: 'white', fontSize: '20px', fontWeight: 'bold' }}>{stats.max}</div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {stats.type === 'chart' && (
+                                    <>
+                                        <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                                            <button
+                                                onClick={() => setChartTypes(p => ({ ...p, [q.id]: 'bar' }))}
+                                                style={{ background: cType === 'bar' ? '#B292F2' : '#333', border: 'none', color: 'white', padding: '4px 12px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}
+                                            >Bar Chart</button>
+                                            <button
+                                                onClick={() => setChartTypes(p => ({ ...p, [q.id]: 'pie' }))}
+                                                style={{ background: cType === 'pie' ? '#B292F2' : '#333', border: 'none', color: 'white', padding: '4px 12px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}
+                                            >Pie Chart</button>
+                                        </div>
+                                        <div style={{ width: '100%', height: 300 }}>
+                                            <ResponsiveContainer>
+                                                {cType === 'bar' ? (
+                                                    <BarChart data={stats.data}>
+                                                        <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                                                        <XAxis dataKey="name" stroke="#666" fontSize={12} />
+                                                        <YAxis allowDecimals={false} stroke="#666" fontSize={12} />
+                                                        <Tooltip contentStyle={{ background: '#1a1a1a', border: '1px solid #333' }} />
+                                                        <Bar dataKey="value" fill="#B292F2" radius={[4, 4, 0, 0]} />
+                                                    </BarChart>
+                                                ) : (
+                                                    <PieChart>
+                                                        <Pie
+                                                            data={stats.data}
+                                                            cx="50%"
+                                                            cy="50%"
+                                                            innerRadius={60}
+                                                            outerRadius={80}
+                                                            fill="#8884d8"
+                                                            paddingAngle={5}
+                                                            dataKey="value"
+                                                        >
+                                                            {stats.data.map((entry, index) => (
+                                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                            ))}
+                                                        </Pie>
+                                                        <Tooltip contentStyle={{ background: '#1a1a1a', border: '1px solid #333' }} />
+                                                        <Legend />
+                                                    </PieChart>
+                                                )}
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );
