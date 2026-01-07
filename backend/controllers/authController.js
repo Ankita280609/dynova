@@ -24,8 +24,8 @@ exports.signup = async (req, res) => {
     const token = generateToken(user);
     res.json({ token, user: { id: user._id, email: user.email, name: user.name } });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Signin Error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
 
@@ -43,8 +43,8 @@ exports.signin = async (req, res) => {
     const token = generateToken(user);
     res.json({ token, user: { id: user._id, email: user.email, name: user.name } });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Signin Error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
 
@@ -54,7 +54,7 @@ exports.getMe = async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json(user);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Signin Error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
