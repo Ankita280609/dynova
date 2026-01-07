@@ -28,12 +28,22 @@ app.get('/', (req, res) => res.send({ status: 'ok', message: 'Dynova backend run
 
 app.get('/api/health', async (req, res) => {
   const isConnected = mongoose.connection.readyState === 1;
+  const mongoUri = process.env.MONGO_URI || "";
+
+  // Mask the password for security
+  let maskedUri = "Not Set";
+  if (mongoUri) {
+    maskedUri = mongoUri.replace(/\/\/.*:.*@/, "//user:****@");
+  }
+
   res.json({
     status: isConnected ? 'healthy' : 'degraded',
     database: isConnected ? 'connected' : 'disconnected',
+    readyState: mongoose.connection.readyState,
     env: {
       hasMongoUri: !!process.env.MONGO_URI,
-      hasJwtSecret: !!process.env.JWT_SECRET
+      hasJwtSecret: !!process.env.JWT_SECRET,
+      uriFormat: maskedUri
     }
   });
 });
