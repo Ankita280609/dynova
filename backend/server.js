@@ -12,6 +12,15 @@ const PORT = process.env.PORT || 5001;
 // Connect to MongoDB
 connectDB();
 
+// Middleware to ensure DB is connected
+app.use(async (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    console.log('DB not connected, attempting to connect...');
+    await connectDB();
+  }
+  next();
+});
+
 // Middleware
 app.use(cors({
   origin: '*', // For now, allowing all to debug. Ideally set to Vercel URL later.
