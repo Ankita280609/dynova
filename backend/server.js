@@ -12,7 +12,11 @@ const PORT = process.env.PORT || 5001;
 connectDB();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*', // For now, allowing all to debug. Ideally set to Vercel URL later.
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // Routes
