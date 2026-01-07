@@ -1,0 +1,15 @@
+{
+    "name": "dynova-root",
+    "version": "1.0.0",
+    "engines": {
+        "node": "20.x"
+    },
+    "scripts": {
+        "install-client": "cd frontend && npm install",
+        "install-server": "cd backend && npm install",
+        "build": "npm run install-client && npm run install-server && cd frontend && npm run build"
+    },
+    "devDependencies": {
+        "concurrently": "^8.0.0"
+    }
+}
