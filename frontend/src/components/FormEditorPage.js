@@ -5,6 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 
 import './FormEditorPage.css';
 import { Logo, HomeIcon, ThemesIcon, ExportIcon, SearchIcon, PlusIcon, ShareIcon, CopyIcon, WhatsAppIcon, EmailIcon, CloseIcon } from './Icons';
+import { API_BASE_URL } from '../config';
 
 /* ---------------------- ICONS ---------------------- */
 const Icon = ({ char }) => <span className="option-icon">{char}</span>;
@@ -161,7 +162,7 @@ export default function FormEditorPage({ setPage }) {
   // Load form
   useEffect(() => {
     if (id) {
-      fetch(`http://localhost:5001/api/forms/${id}`)
+      fetch(`${API_BASE_URL}/forms/${id}`)
         .then(res => res.json())
         .then(data => {
           setFormTitle(data.title);
@@ -182,7 +183,7 @@ export default function FormEditorPage({ setPage }) {
     }
 
     try {
-      const url = id ? `http://localhost:5001/api/forms/${id}` : 'http://localhost:5001/api/forms';
+      const url = id ? `${API_BASE_URL}/forms/${id}` : `${API_BASE_URL}/forms`;
       const method = id ? 'PUT' : 'POST';
       const res = await fetch(url, {
         method,
@@ -300,7 +301,7 @@ export default function FormEditorPage({ setPage }) {
             </button>
           )}
           <button className="btn-editor-publish" onClick={saveForm} disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : 'Save Form'}
+            {isSubmitting ? 'Saving...' : (id ? 'Save Changes' : 'Create Form')}
           </button>
         </div>
       </header>

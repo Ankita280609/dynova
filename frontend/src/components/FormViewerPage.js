@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import './FormEditorPage.css';
+import { API_BASE_URL } from '../config';
 
 export default function FormViewerPage() {
     const { id } = useParams();
@@ -11,7 +12,7 @@ export default function FormViewerPage() {
     const [submitted, setSubmitted] = useState(false);
 
     useEffect(() => {
-        fetch(`http://localhost:5001/api/forms/${id}`)
+        fetch(`${API_BASE_URL}/forms/${id}`)
             .then(res => res.json())
             .then(data => {
                 setForm(data);
@@ -71,7 +72,7 @@ export default function FormViewerPage() {
                 value: val
             }));
 
-            const res = await fetch(`http://localhost:5001/api/forms/${id}/submit`, {
+            const res = await fetch(`${API_BASE_URL}/forms/${id}/submit`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ answers: formattedAnswers })

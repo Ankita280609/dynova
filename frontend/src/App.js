@@ -54,8 +54,9 @@ function AppHeader({ isAuthenticated, onLogout, theme, toggleTheme }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Hide header on form viewer page
-  if (location.pathname.startsWith('/forms/view/')) return null;
+  // Hide global header on specialized pages that have their own headers
+  const hideHeaderRegex = /^\/(forms|analytics|aichat|dashboard|profile)/;
+  if (hideHeaderRegex.test(location.pathname)) return null;
 
   return (
     <Header
@@ -69,6 +70,7 @@ function AppHeader({ isAuthenticated, onLogout, theme, toggleTheme }) {
         if (page === 'signUp') navigate('/signup');
         if (page === 'dashboard') navigate('/dashboard');
         if (page === 'profile') navigate('/profile');
+        if (page === 'analytics') navigate('/analytics');
       }}
     />
   );
@@ -172,6 +174,7 @@ function App() {
           <Route path="/forms/new" element={<FormEditorPage />} />
           <Route path="/forms/:id/edit" element={<FormEditorPage />} />
           <Route path="/forms/:id" element={<FormViewerPage />} />
+          <Route path="/analytics" element={<AnalyticsDashboardPage />} />
           <Route
             path="/forms/:id/analytics"
             element={<AnalyticsDashboardPage />}

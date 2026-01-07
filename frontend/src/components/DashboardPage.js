@@ -131,7 +131,7 @@ const DashboardPage = ({ onLogout }) => {
           <nav className="sidebar-nav">
             <ul>
               <li className="active"><a href="#"><FileIcon /> My Forms</a></li>
-              <li><a href="#"><ChartIcon /> Analytics</a></li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); navigate('/analytics'); }}><ChartIcon /> Analytics</a></li>
               <li><a href="#" onClick={handleAskTeamClick}><HelpIcon /> Ask Our Team</a></li>
               <li><a href="#" onClick={(e) => { e.preventDefault(); navigate('/profile'); }}>Profile</a></li>
             </ul>

@@ -24,3 +24,5 @@ app.get('/', (req, res) => res.send({ status: 'ok', message: 'Dynova backend run
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
+
+module.exports = app;
