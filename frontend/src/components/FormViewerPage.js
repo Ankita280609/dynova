@@ -3,20 +3,13 @@ import { useParams } from 'react-router-dom';
 import './FormEditorPage.css';
 import { API_BASE_URL } from '../config';
 
-export default function FormViewerPage({ theme, toggleTheme, setTheme }) {
+export default function FormViewerPage() {
     const { id } = useParams();
     const [form, setForm] = useState(null);
     const [loading, setLoading] = useState(true);
     const [currentStep, setCurrentStep] = useState(0);
     const [answers, setAnswers] = useState({});
     const [submitted, setSubmitted] = useState(false);
-
-    // Enforce Layout Shift to Light on Mount if currently dark
-    useEffect(() => {
-        if (theme === 'dark' && setTheme) {
-            setTheme('light');
-        }
-    }, []); // Run once on mount
 
     useEffect(() => {
         fetch(`${API_BASE_URL}/forms/${id}`)
@@ -31,16 +24,16 @@ export default function FormViewerPage({ theme, toggleTheme, setTheme }) {
             });
     }, [id]);
 
-    if (loading) return <div className="viewer-loading" style={{ color: 'var(--text-dark)' }}>Loading form...</div>;
-    if (!form) return <div className="viewer-error" style={{ color: 'var(--text-dark)' }}>Form not found</div>;
+    if (loading) return <div className="viewer-loading">Loading form...</div>;
+    if (!form) return <div className="viewer-error">Form not found</div>;
 
     if (submitted) {
         return (
-            <div className="viewer-submitted page-fade-in" style={{ background: 'var(--bg-app)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div className="submitted-card" style={{ background: 'var(--bg-white)', padding: '40px', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', textAlign: 'center' }}>
-                    <div className="check-icon" style={{ fontSize: '48px', color: '#6aaa64', marginBottom: '20px' }}>✓</div>
-                    <h2 style={{ color: 'var(--text-dark)' }}>Response Submitted!</h2>
-                    <p style={{ color: 'var(--text-medium)' }}>Thank you for completing the form.</p>
+            <div className="viewer-submitted">
+                <div className="submitted-card">
+                    <div className="check-icon">✓</div>
+                    <h2>Response Submitted!</h2>
+                    <p>Thank you for completing the form.</p>
                 </div>
             </div>
         );
@@ -97,57 +90,43 @@ export default function FormViewerPage({ theme, toggleTheme, setTheme }) {
     };
 
     return (
-        <div className="form-viewer-layout page-fade-in">
-            {/* Local Header for Viewer */}
-            <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 10 }}>
-                <button onClick={toggleTheme} className="btn-theme-toggle" title="Toggle Theme" style={{ background: 'var(--bg-white)', border: '1px solid var(--border-color)', borderRadius: '50%', width: '40px', height: '40px', color: 'var(--text-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                    {theme === 'dark' ? (
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                    ) : (
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                    )}
-                </button>
-            </div>
-
-            <div className="viewer-glass-card">
+        <div className="form-viewer-layout">
+            <div className="viewer-container">
                 <div className="viewer-header">
-                    <div className="viewer-step-indicator">
-                        Step {currentStep + 1} of {questions.length}
-                    </div>
                     <h1>{form.title}</h1>
-                    {form.description && <p className="viewer-desc">{form.description}</p>}
+                    {form.description && <p>{form.description}</p>}
                 </div>
 
-                <div className="viewer-progress-container">
+                <div className="progress-bar">
                     <div
-                        className="viewer-progress-bar"
+                        className="progress-fill"
                         style={{ width: `${((currentStep + 1) / questions.length) * 100}%` }}
                     ></div>
                 </div>
 
-                <div className="viewer-question-wrapper">
-                    <label className="viewer-question-label">
-                        {currentQuestion.label} {currentQuestion.required && <span className="req-star">*</span>}
-                    </label>
+                <div className="question-card-viewer">
+                    <div className="q-viewer-label">
+                        {currentQuestion.label} {currentQuestion.required && <span className="req">*</span>}
+                    </div>
 
-                    <div className="viewer-input-section">
+                    <div className="q-viewer-input">
                         {renderInput(currentQuestion, answers[currentQuestion.id], handleAnswer)}
                     </div>
                 </div>
 
-                <div className="viewer-footer-actions">
+                <div className="viewer-actions">
                     <button
-                        className="btn-viewer-back"
+                        className="btn-viewer-secondary"
                         onClick={handlePrev}
                         disabled={currentStep === 0}
                     >
                         Previous
                     </button>
                     <button
-                        className="btn-viewer-next"
+                        className="btn-viewer-primary"
                         onClick={handleNext}
                     >
-                        {isLastStep ? 'Submit Response' : 'Continue'}
+                        {isLastStep ? 'Submit' : 'Next'}
                     </button>
                 </div>
             </div>
