@@ -139,19 +139,24 @@ const AiChatPage = () => {
                     <br />
                   </span>
                 ))}
-                {msg.formData && (
+                {msg.formData && msg.formData.elements && Array.isArray(msg.formData.elements) && (
                   <button
                     className="btn-create-form"
                     onClick={() => handleCreateForm(msg.formData)}
                     style={{
-                      marginTop: '12px',
-                      padding: '10px 20px',
-                      background: 'var(--accent)',
+                      marginTop: '16px',
+                      padding: '12px 24px',
+                      backgroundColor: 'var(--primary-purple, #b192f1)',
                       color: 'white',
-                      border: 'none',
-                      borderRadius: '8px',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      borderRadius: '10px',
                       cursor: 'pointer',
-                      fontWeight: '600'
+                      fontWeight: '700',
+                      fontSize: '0.95rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      boxShadow: '0 4px 15px rgba(177, 146, 241, 0.3)'
                     }}
                   >
                     Create This Form →
