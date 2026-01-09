@@ -1,6 +1,51 @@
 /* ========================
    🌸 GLOBAL EDITOR LAYOUT
    ======================== */
+/* Copilot Panel */
+.copilot-panel-overlay {
+  position: fixed;
+  top: 60px;
+  /* Below header */
+  right: 0;
+  bottom: 0;
+  width: 400px;
+  background: white;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 0.3s ease;
+}
+
+.copilot-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.copilot-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.copilot-body {
+  flex: 1;
+  overflow: hidden;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
 .form-editor-layout {
   display: flex;
   flex-direction: column;

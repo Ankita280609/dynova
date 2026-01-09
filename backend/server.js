@@ -32,6 +32,7 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/forms', require('./routes/forms'));
+app.use('/api/ai', require('./routes/ai'));
 
 app.get('/', (req, res) => res.send({ status: 'ok', message: 'Dynova backend running' }));
 
