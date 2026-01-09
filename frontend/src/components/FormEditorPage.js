@@ -201,9 +201,10 @@ export default function FormEditorPage({ setPage, theme, toggleTheme }) {
     setIsSubmitting(true);
     setSafetyChecking(true);
 
-    // 1. Safety Check (Title + Description)
+    // 1. Safety Check (Title + Description + All Questions)
     try {
-      const safetyResult = await checkContentSafety(`${formTitle} ${formDescription}`);
+      const questionsText = questions.map(q => q.label).join(' ');
+      const safetyResult = await checkContentSafety(`${formTitle} ${formDescription} ${questionsText}`);
       if (safetyResult && safetyResult.categoriesAnalysis) {
         const highSeverityItems = safetyResult.categoriesAnalysis.filter(cat => cat.severity > 0);
         if (highSeverityItems.length > 0) {
