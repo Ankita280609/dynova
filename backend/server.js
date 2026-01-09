@@ -58,10 +58,12 @@ app.get('/api/health', async (req, res) => {
   });
 });
 
-if (process.env.NODE_ENV !== 'production') {
+// For local development
+if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
   });
 }
 
+// Export for Vercel
 module.exports = app;
