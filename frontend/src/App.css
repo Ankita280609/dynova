@@ -1560,6 +1560,10 @@ button {
   color: var(--text-white);
 }
 
+.btn-delete:hover {
+  color: #ff4757 !important;
+}
+
 .ai-bot-section {
   display: flex;
   align-items: center;

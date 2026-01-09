@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Logo, FileIcon, ChartIcon, HelpIcon, SearchIcon, BellIcon, PlusIcon, BarChartIcon, MoreHorizontalIcon, AiBotIcon, ArrowRightIcon, StarIcon, SunIcon, MoonIcon } from './Icons';
+import { Logo, FileIcon, ChartIcon, HelpIcon, SearchIcon, BellIcon, PlusIcon, BarChartIcon, MoreHorizontalIcon, AiBotIcon, ArrowRightIcon, StarIcon, SunIcon, MoonIcon, TrashIcon } from './Icons';
 import EmailModal from './EmailModal';
 import { API_BASE_URL } from '../config';
 
@@ -105,6 +105,29 @@ const DashboardPage = ({ onLogout, theme, toggleTheme }) => {
     }
   };
 
+  const handleDeleteForm = async (e, formId) => {
+    e.stopPropagation();
+    if (!window.confirm('Are you sure you want to delete this form? This action cannot be undone.')) return;
+
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${API_BASE_URL}/forms/${formId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        setForms(prev => prev.filter(f => f._id !== formId));
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Failed to delete form');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error while deleting form');
+    }
+  };
+
   const handleAskTeamClick = (e) => {
     e.preventDefault();
     setIsModalOpen(true);
@@ -189,6 +212,9 @@ const DashboardPage = ({ onLogout, theme, toggleTheme }) => {
                       <button className="btn-card-icon" onClick={(e) => { e.stopPropagation(); navigate(`/forms/${form._id}/analytics`); }}><BarChartIcon /></button>
                       <button className="btn-card-icon" onClick={(e) => handleBookmark(e, form._id)}>
                         <StarIcon filled={bookmarkedIds.includes(form._id)} />
+                      </button>
+                      <button className="btn-card-icon btn-delete" onClick={(e) => handleDeleteForm(e, form._id)} title="Delete Form">
+                        <TrashIcon />
                       </button>
                     </div>
                   </div>
