@@ -6,6 +6,7 @@ const ResponseSchema = new mongoose.Schema({
         questionId: { type: String, required: true },
         value: { type: mongoose.Schema.Types.Mixed } // Can be string, number, array, etc.
     }],
+    timeTaken: { type: Number }, // in seconds
     submittedAt: { type: Date, default: Date.now }
 });
 

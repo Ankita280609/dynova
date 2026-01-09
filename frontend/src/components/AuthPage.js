@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../config';
+import { UserIcon, EmailIcon, ShieldIcon } from './Icons';
 
 function SignUpForm({ switchToSignIn, onAuthSuccess }) {
     const navigate = useNavigate();
@@ -43,18 +44,22 @@ function SignUpForm({ switchToSignIn, onAuthSuccess }) {
     return (
         <div className="auth-form-wrapper">
             <h3>Start Creating Smarter Forms Today.</h3>
-            {error && <div className="auth-error" style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
+            {error && <div className="auth-error" style={{ color: '#ff4757', marginBottom: '15px', fontWeight: '500' }}>{error}</div>}
             <form onSubmit={handleSignUp}>
                 <div className="auth-input-group">
+                    <UserIcon />
                     <input id="username" type="text" placeholder="USERNAME" required />
                 </div>
                 <div className="auth-input-group">
+                    <EmailIcon />
                     <input id="email" type="email" placeholder="EMAIL" required />
                 </div>
                 <div className="auth-input-group">
+                    <ShieldIcon />
                     <input id="password" type="password" placeholder="PASSWORD" required />
                 </div>
                 <div className="auth-input-group">
+                    <ShieldIcon />
                     <input id="repeat-password" type="password" placeholder="REPEAT YOUR PASSWORD" required />
                 </div>
                 <button type="submit" className="btn btn-auth-submit" disabled={loading}>{loading ? 'Signing Up...' : 'Sign Up'}</button>
@@ -73,7 +78,7 @@ function SignInForm({ switchToSignUp, onAuthSuccess }) {
         e.preventDefault();
         setLoading(true);
         setError('');
-        const email = e.target['signin-username'].value; // Assuming email for now or username
+        const email = e.target['signin-username'].value;
         const password = e.target['signin-password'].value;
 
         try {
@@ -98,12 +103,14 @@ function SignInForm({ switchToSignUp, onAuthSuccess }) {
         <div className="auth-form-wrapper">
             <h3>Welcome Back!</h3>
             <h4>Sign In and Keep Creating.</h4>
-            {error && <div className="auth-error" style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
+            {error && <div className="auth-error" style={{ color: '#ff4757', marginBottom: '15px', fontWeight: '500' }}>{error}</div>}
             <form onSubmit={handleSignIn}>
                 <div className="auth-input-group">
+                    <EmailIcon />
                     <input id="signin-username" type="email" placeholder="EMAIL" required />
                 </div>
                 <div className="auth-input-group">
+                    <ShieldIcon />
                     <input id="signin-password" type="password" placeholder="PASSWORD" required />
                 </div>
                 <button type="submit" className="btn btn-auth-submit" disabled={loading}>{loading ? 'Signing In...' : 'Sign In'}</button>
@@ -128,12 +135,10 @@ export default function AuthPage({ initialState, onAuthSuccess }) {
     return (
         <div className="auth-page page-fade-in">
             <div className="auth-page-left">
-                {/* This content now matches the image */}
                 <div className="auth-left-content">
                     <h1>Collect Smarter.<br />Analyse Faster.</h1>
                     <p>From form creation to decision making, all in one place. Experience live analytics that transform raw inputs into actionable insight instantly.</p>
                 </div>
-                {/* Footer and back button from original code (good to keep) */}
                 <div className="auth-left-footer">
                     <a href="#">Terms Of Use</a>
                     <a href="#">Privacy</a>

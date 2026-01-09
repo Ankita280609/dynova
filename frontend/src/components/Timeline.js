@@ -25,19 +25,57 @@ function TimelineItem({ number, tagColor, tagText, title, text, align }) {
 }
 
 export default function Timeline() {
-    const loremText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque imperdiet, turpis vel bibendum dictum, purus enim ultrices mauris, nec sodales ante sem sit amet nunc. Vivamus nibh elit, faucibus at eros id, tincidunt laoreet augue. Mauris sagittis, turpis at dictum luctus, nibh nisl.";
-
     return (
         <section id="why-us" className="timeline-section">
             <div className="container">
-                <h2 className="timeline-main-title">TIMELINE</h2>
+                <h2 className="timeline-main-title">WHY US?</h2>
                 <div className="timeline-container">
                     <div className="timeline-central-line"></div>
-                    <TimelineItem number="1" tagColor="#f5a623" tagText="Foundation" title="Our Project Kick-off" align="left" text={loremText} />
-                    <TimelineItem number="2" tagColor="#d0021b" tagText="Development" title="Core Feature Build" align="right" text={loremText} />
-                    <TimelineItem number="3" tagColor="#4a90e2" tagText="Launch" title="Initial Public Release" align="left" text={loremText} />
-                    <TimelineItem number="4" tagColor="#7ed321" tagText="Expansion" title="Scaling and Growth" align="right" text={loremText} />
-                    <TimelineItem number="5" tagColor="#A067E4" tagText="Future" title="Vision 2025" align="left" text={loremText} />
+
+                    <TimelineItem
+                        number="1"
+                        tagColor="#B292F2"
+                        tagText="Real-Time"
+                        title="Real-Time Analytics, Not Just Responses"
+                        align="left"
+                        text="Watch your data come alive. Every submission instantly updates graphs, charts, and insights—so you never wait to understand what’s happening."
+                    />
+
+                    <TimelineItem
+                        number="2"
+                        tagColor="#FF7E67"
+                        tagText="Advanced"
+                        title="Advanced Question Types"
+                        align="right"
+                        text="From drag-and-drop sorting to scratch-to-reveal, digital signatures, code editors, and image annotations. Features you won't find anywhere else."
+                    />
+
+                    <TimelineItem
+                        number="3"
+                        tagColor="#6AAA64"
+                        tagText="Adaptive"
+                        title="Smart, Adaptive Forms Powered by Logic"
+                        align="left"
+                        text="Show or hide questions automatically based on user inputs. Deliver personalized, dynamic forms that feel intelligent and intuitive."
+                    />
+
+                    <TimelineItem
+                        number="4"
+                        tagColor="#8A4FFF"
+                        tagText="AI-Powered"
+                        title="AI-Powered Insights & Summaries"
+                        align="right"
+                        text="No more manually analyzing long responses. Our AI highlights trends, patterns, sentiments, and gives you instant summaries for quick decision-making."
+                    />
+
+                    <TimelineItem
+                        number="5"
+                        tagColor="#FFBB28"
+                        tagText="Versatile"
+                        title="Built for Creators, Teams & Businesses"
+                        align="left"
+                        text="Simple to use, yet powerful enough for complex workflows. Create forms in minutes, share anywhere, collaborate effortlessly, and export analytics seamlessly."
+                    />
                 </div>
             </div>
         </section>

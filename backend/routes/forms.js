@@ -92,7 +92,11 @@ router.post('/:id/bookmark', authMiddleware, async (req, res) => {
 // For simplicity, public GET is fine, but editing (PUT) must be protected.
 router.get('/:id', async (req, res) => {
     try {
-        const form = await Form.findById(req.params.id);
+        const form = await Form.findByIdAndUpdate(
+            req.params.id,
+            { $inc: { views: 1 } },
+            { new: true }
+        );
         if (!form) return res.status(404).json({ error: 'Form not found' });
         res.json(form);
     } catch (err) {
@@ -146,10 +150,11 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 // POST /api/forms/:id/submit - Submit a response (Public)
 router.post('/:id/submit', async (req, res) => {
     try {
-        const { answers } = req.body;
+        const { answers, timeTaken } = req.body;
         const response = new Response({
             formId: req.params.id,
-            answers
+            answers,
+            timeTaken
         });
         const savedResponse = await response.save();
         res.json(savedResponse);

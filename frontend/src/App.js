@@ -27,6 +27,8 @@ import AiChatPage from './components/AiChatPage';
 
 /* ---------------- HOME PAGE ---------------- */
 
+import Footer from './components/Footer';
+
 function HomePage() {
   const navigate = useNavigate();
 
@@ -44,11 +46,27 @@ function HomePage() {
       <Timeline />
       <VideoFeatureSection setCurrentPage={bridgeSetPage} />
       <HoverBarChart />
+      <Footer />
     </main>
   );
 }
 
 /* ---------------- HEADER WRAPPER ---------------- */
+
+function ThemeManager({ theme }) {
+  const location = useLocation();
+
+  useEffect(() => {
+    const darkRoutes = ['/', '/signin', '/signup'];
+    if (darkRoutes.includes(location.pathname)) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+  }, [theme, location.pathname]);
+
+  return null;
+}
 
 function AppHeader({ isAuthenticated, onLogout, theme, toggleTheme }) {
   const navigate = useNavigate();
@@ -58,12 +76,17 @@ function AppHeader({ isAuthenticated, onLogout, theme, toggleTheme }) {
   const hideHeaderRegex = /^\/(forms|analytics|aichat|dashboard|profile)/;
   if (hideHeaderRegex.test(location.pathname)) return null;
 
+  const isHomePage = location.pathname === '/';
+  const isAuthPage = location.pathname === '/signin' || location.pathname === '/signup';
+
   return (
     <Header
       isAuthenticated={isAuthenticated}
       onLogout={onLogout}
       theme={theme}
       toggleTheme={toggleTheme}
+      isHomePage={isHomePage}
+      isAuthPage={isAuthPage}
       setPage={(page) => {
         if (page === 'home') navigate('/');
         if (page === 'signIn') navigate('/signin');
@@ -83,11 +106,7 @@ function App() {
     !!localStorage.getItem('token')
   );
 
-  const [theme, setTheme] = useState('dark');
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
+  const [theme, setTheme] = useState('light');
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
@@ -108,6 +127,7 @@ function App() {
   return (
     <Router>
       <div className="App">
+        <ThemeManager theme={theme} />
         <AppHeader
           isAuthenticated={isAuthenticated}
           onLogout={handleLogout}
@@ -152,7 +172,11 @@ function App() {
             path="/dashboard"
             element={
               isAuthenticated ? (
-                <DashboardPage onLogout={handleLogout} theme={theme} />
+                <DashboardPage
+                  onLogout={handleLogout}
+                  theme={theme}
+                  toggleTheme={toggleTheme}
+                />
               ) : (
                 <Navigate to="/signin" />
               )
@@ -171,8 +195,8 @@ function App() {
           />
 
           {/* Form Routes */}
-          <Route path="/forms/new" element={<FormEditorPage />} />
-          <Route path="/forms/:id/edit" element={<FormEditorPage />} />
+          <Route path="/forms/new" element={<FormEditorPage theme={theme} toggleTheme={toggleTheme} />} />
+          <Route path="/forms/:id/edit" element={<FormEditorPage theme={theme} toggleTheme={toggleTheme} />} />
           <Route path="/forms/:id" element={<FormViewerPage theme={theme} toggleTheme={toggleTheme} setTheme={setTheme} />} />
           <Route path="/analytics" element={<AnalyticsDashboardPage theme={theme} toggleTheme={toggleTheme} />} />
           <Route
@@ -180,7 +204,7 @@ function App() {
             element={<AnalyticsDashboardPage theme={theme} toggleTheme={toggleTheme} />}
           />
 
-          <Route path="/aichat" element={<AiChatPage />} />
+          <Route path="/aichat" element={<AiChatPage theme={theme} toggleTheme={toggleTheme} />} />
 
           <Route path="*" element={<h2>Page Not Found</h2>} />
         </Routes>

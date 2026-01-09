@@ -10,6 +10,7 @@ export default function FormViewerPage({ theme, toggleTheme, setTheme }) {
     const [currentStep, setCurrentStep] = useState(0);
     const [answers, setAnswers] = useState({});
     const [submitted, setSubmitted] = useState(false);
+    const [startTime, setStartTime] = useState(null);
 
     // Enforce Layout Shift to Light on Mount if currently dark
     useEffect(() => {
@@ -24,6 +25,7 @@ export default function FormViewerPage({ theme, toggleTheme, setTheme }) {
             .then(data => {
                 setForm(data);
                 setLoading(false);
+                setStartTime(Date.now());
             })
             .catch(err => {
                 console.error(err);
@@ -79,10 +81,12 @@ export default function FormViewerPage({ theme, toggleTheme, setTheme }) {
                 value: val
             }));
 
+            const timeTaken = startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
+
             const res = await fetch(`${API_BASE_URL}/forms/${id}/submit`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ answers: formattedAnswers })
+                body: JSON.stringify({ answers: formattedAnswers, timeTaken })
             });
 
             if (res.ok) {

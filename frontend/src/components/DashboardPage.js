@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Logo, FileIcon, ChartIcon, HelpIcon, SearchIcon, BellIcon, PlusIcon, BarChartIcon, MoreHorizontalIcon, AiBotIcon, ArrowRightIcon, StarIcon } from './Icons';
+import { Logo, FileIcon, ChartIcon, HelpIcon, SearchIcon, BellIcon, PlusIcon, BarChartIcon, MoreHorizontalIcon, AiBotIcon, ArrowRightIcon, StarIcon, SunIcon, MoonIcon } from './Icons';
 import EmailModal from './EmailModal';
 import { API_BASE_URL } from '../config';
 
-const DashboardPage = ({ onLogout }) => {
+const DashboardPage = ({ onLogout, theme, toggleTheme }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('active');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -124,7 +124,7 @@ const DashboardPage = ({ onLogout }) => {
       <div className="dashboard-layout page-fade-in">
         <aside className="dashboard-sidebar">
           <div className="sidebar-logo"><Logo />dynova</div>
-          <div className="sidebar-user">
+          <div className="sidebar-user" onClick={() => navigate('/profile')}>
             <div className="user-avatar">{getInitials(user?.name)}</div>
             <span className="user-name">{user?.name || 'User'}</span>
           </div>
@@ -133,7 +133,6 @@ const DashboardPage = ({ onLogout }) => {
               <li className="active"><a href="#"><FileIcon /> My Forms</a></li>
               <li><a href="#" onClick={(e) => { e.preventDefault(); navigate('/analytics'); }}><ChartIcon /> Analytics</a></li>
               <li><a href="#" onClick={handleAskTeamClick}><HelpIcon /> Ask Our Team</a></li>
-              <li><a href="#" onClick={(e) => { e.preventDefault(); navigate('/profile'); }}>Profile</a></li>
             </ul>
           </nav>
         </aside>
@@ -153,6 +152,9 @@ const DashboardPage = ({ onLogout }) => {
               </div>
             </div>
             <div className="header-right">
+              <button className="theme-toggle-btn" onClick={toggleTheme}>
+                {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+              </button>
               <button className="notification-btn"><BellIcon /></button>
               <button className="btn-create-form" onClick={() => navigate('/forms/new')}><PlusIcon /> Create New Form</button>
               {onLogout && (

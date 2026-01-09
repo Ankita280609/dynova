@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import {
+    ContactIcon, NumbersIcon, ChoicesIcon, TimeIcon, UploadIcon,
+    InstructionIcon, IdentityIcon, LegalIcon, AdvancedIcon, LogicIcon,
+    SearchIcon, ArrowLeftIcon
+} from './Icons';
 
 export default function AllFeaturesPage({ setCurrentPage }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeCategory, setActiveCategory] = useState('text-fields');
 
-    // --- THE DATA FROM YOUR SCREENSHOT ---
     const featureCategories = [
         {
             id: 'text-fields',
             title: 'Text & Contact Fields',
+            icon: <ContactIcon />,
             features: [
                 { title: 'Short Text', desc: 'Single-line input for names or titles.' },
                 { title: 'Long Text', desc: 'Multi-line input for detailed responses.' },
@@ -22,6 +27,7 @@ export default function AllFeaturesPage({ setCurrentPage }) {
         {
             id: 'numbers',
             title: 'Numbers & Calculations',
+            icon: <NumbersIcon />,
             features: [
                 { title: 'Number Field', desc: 'Accepts integer inputs only.' },
                 { title: 'Decimal Field', desc: 'Allows fractional values.' },
@@ -32,6 +38,7 @@ export default function AllFeaturesPage({ setCurrentPage }) {
         {
             id: 'choices',
             title: 'Choices & Selections',
+            icon: <ChoicesIcon />,
             features: [
                 { title: 'Single Select', desc: 'Radio buttons for one-choice answers.' },
                 { title: 'Multi Select', desc: 'Checkboxes for multiple selections.' },
@@ -46,6 +53,7 @@ export default function AllFeaturesPage({ setCurrentPage }) {
         {
             id: 'date-time',
             title: 'Date & Time',
+            icon: <TimeIcon />,
             features: [
                 { title: 'Date Picker', desc: 'Calendar interface for date selection.' },
                 { title: 'Time Picker', desc: 'Clock interface for time selection.' },
@@ -56,6 +64,7 @@ export default function AllFeaturesPage({ setCurrentPage }) {
         {
             id: 'uploads',
             title: 'Uploads & Media',
+            icon: <UploadIcon />,
             features: [
                 { title: 'File Upload', desc: 'Allow users to attach documents.' },
                 { title: 'Image Upload', desc: 'Specific field for photo uploads.' },
@@ -65,6 +74,7 @@ export default function AllFeaturesPage({ setCurrentPage }) {
         {
             id: 'instructional',
             title: 'Instructional Fields',
+            icon: <InstructionIcon />,
             features: [
                 { title: 'Description', desc: 'Paragraph text for explanations or help.' },
                 { title: 'Embedded Media', desc: 'Show a video or audio clip in the question.' },
@@ -73,6 +83,7 @@ export default function AllFeaturesPage({ setCurrentPage }) {
         {
             id: 'identifiers',
             title: 'Identifiers',
+            icon: <IdentityIcon />,
             features: [
                 { title: 'Unique ID', desc: 'Sequential ID based on rules.' },
                 { title: 'Random ID', desc: 'Auto-generated code for tracking.' },
@@ -81,6 +92,7 @@ export default function AllFeaturesPage({ setCurrentPage }) {
         {
             id: 'legal',
             title: 'Consent & Legal',
+            icon: <LegalIcon />,
             features: [
                 { title: 'Terms & Conditions', desc: 'Text block with mandatory checkbox.' },
                 { title: 'Digital Signature', desc: 'Canvas field for e-signing forms.' },
@@ -90,6 +102,7 @@ export default function AllFeaturesPage({ setCurrentPage }) {
         {
             id: 'advanced',
             title: 'Advanced & Gamified',
+            icon: <AdvancedIcon />,
             features: [
                 { title: 'Scratch-to-Reveal', desc: 'Uncover hidden text or prizes.' },
                 { title: 'Timer-Based', desc: 'Countdown or time limits per question.' },
@@ -100,6 +113,7 @@ export default function AllFeaturesPage({ setCurrentPage }) {
         {
             id: 'logic',
             title: 'Logic & Components',
+            icon: <LogicIcon />,
             features: [
                 { title: 'Subform', desc: 'Repeatable grouped fields (Nested).' },
                 { title: 'Conditional Logic', desc: 'Show/Hide fields based on answers.' },
@@ -109,79 +123,92 @@ export default function AllFeaturesPage({ setCurrentPage }) {
         }
     ];
 
-    // --- SEARCH LOGIC ---
     const filteredCategories = featureCategories.map(category => {
-        const filteredFeatures = category.features.filter(feature => 
+        const filteredFeatures = category.features.filter(feature =>
             feature.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             feature.desc.toLowerCase().includes(searchTerm.toLowerCase())
         );
         return { ...category, features: filteredFeatures };
     }).filter(category => category.features.length > 0);
 
-    // --- SCROLL HANDLER ---
     const handleScrollTo = (id) => {
         const element = document.getElementById(id);
         if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const offset = 100; // Account for fixed header
+            const bodyRect = document.body.getBoundingClientRect().top;
+            const elementRect = element.getBoundingClientRect().top;
+            const elementPosition = elementRect - bodyRect;
+            const offsetPosition = elementPosition - offset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
             setActiveCategory(id);
         }
     };
 
     return (
-        <div className="all-features-page">
-            <div className="container">
-                
-                {/* 1. HEADER & SEARCH */}
-                <div className="features-header-section">
-                    <button onClick={() => setCurrentPage('home')} className="btn btn-go-back">
-                        ← Back to Home
+        <div className="all-features-page page-fade-in">
+            <div className="features-hero">
+                <div className="container">
+                    <button onClick={() => setCurrentPage('home')} className="btn-back-minimal">
+                        <ArrowLeftIcon /> Back to Home
                     </button>
-                    <h1>All Features</h1>
-                    <p>Explore the comprehensive toolkit that powers Dynova.</p>
-                    
-                    <div className="feature-search-bar">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg>
-                        <input 
-                            type="text" 
-                            placeholder="Search for a feature (e.g., 'Signature', 'Logic')..." 
+                    <h1>Feature Toolkit</h1>
+                    <p>Discover everything Dynova has to offer to build powerful, interactive forms.</p>
+
+                    <div className="feature-search-wrapper">
+                        <SearchIcon />
+                        <input
+                            type="text"
+                            placeholder="Find a field or functionality..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
                 </div>
+            </div>
 
-                {/* 2. LAYOUT: SIDEBAR + CONTENT */}
+            <div className="container">
                 <div className="features-layout">
-                    
-                    {/* SIDEBAR NAVIGATION */}
-                    <aside className="features-sidebar">
-                        <h3>Categories</h3>
-                        <ul>
-                            {featureCategories.map(cat => (
-                                <li key={cat.id}>
-                                    <button 
-                                        className={activeCategory === cat.id ? 'active' : ''}
-                                        onClick={() => handleScrollTo(cat.id)}
-                                    >
-                                        {cat.title}
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
+                    <aside className="features-nav-sidebar">
+                        <div className="sticky-nav-content">
+                            <h3>Categories</h3>
+                            <nav>
+                                <ul>
+                                    {featureCategories.map(cat => (
+                                        <li key={cat.id}>
+                                            <button
+                                                className={activeCategory === cat.id ? 'active' : ''}
+                                                onClick={() => handleScrollTo(cat.id)}
+                                            >
+                                                <span className="nav-icon">{cat.icon}</span>
+                                                <span className="nav-text">{cat.title}</span>
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </nav>
+                        </div>
                     </aside>
 
-                    {/* MAIN CONTENT GRID */}
-                    <div className="features-content">
+                    <main className="features-sections-wrapper">
                         {filteredCategories.length > 0 ? (
-                            filteredCategories.map(category => (
-                                <section key={category.id} id={category.id} className="feature-category-section">
-                                    <h2 className="category-title">{category.title}</h2>
-                                    <div className="features-page-grid">
-                                        {category.features.map((feature, index) => (
-                                            <div key={index} className="feature-item">
+                            filteredCategories.map((category, catIdx) => (
+                                <section key={category.id} id={category.id} className="feature-group-section">
+                                    <div className="section-header">
+                                        <div className="section-icon">{category.icon}</div>
+                                        <h2>{category.title}</h2>
+                                    </div>
+                                    <div className="features-premium-grid">
+                                        {category.features.map((feature, idx) => (
+                                            <div
+                                                key={idx}
+                                                className="feature-card-premium"
+                                                style={{ animationDelay: `${idx * 0.05}s` }}
+                                            >
+                                                <div className="card-dot"></div>
                                                 <h3>{feature.title}</h3>
                                                 <p>{feature.desc}</p>
                                             </div>
@@ -190,12 +217,14 @@ export default function AllFeaturesPage({ setCurrentPage }) {
                                 </section>
                             ))
                         ) : (
-                            <div className="no-results">
-                                <h3>No features found matching "{searchTerm}"</h3>
+                            <div className="features-empty-state">
+                                <div className="empty-icon">🔍</div>
+                                <h3>No features found</h3>
+                                <p>We couldn't find anything matching "<strong>{searchTerm}</strong>".</p>
+                                <button className="btn-clear-search" onClick={() => setSearchTerm('')}>Clear Search</button>
                             </div>
                         )}
-                    </div>
-
+                    </main>
                 </div>
             </div>
         </div>

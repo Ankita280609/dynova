@@ -12,19 +12,15 @@ export default function HoverBarChart() {
                 <div className="hover-chart-wrapper">
                     <div className="hover-bar-item">
                         <div className="hover-bar bar-1"></div>
-                        <div className="hover-bar-label">Hamsters</div>
                     </div>
                     <div className="hover-bar-item">
                         <div className="hover-bar bar-2"></div>
-                        <div className="hover-bar-label">Rabbits</div>
                     </div>
                     <div className="hover-bar-item">
                         <div className="hover-bar bar-3"></div>
-                        <div className="hover-bar-label">Dogs</div>
                     </div>
                     <div className="hover-bar-item">
                         <div className="hover-bar bar-4"></div>
-                        <div className="hover-bar-label">Cats</div>
                     </div>
                 </div>
             </div>

@@ -29,6 +29,7 @@ const FormSchema = new mongoose.Schema({
     title: { type: String, required: true, default: 'Untitled Form' },
     description: { type: String },
     questions: [QuestionSchema],
+    views: { type: Number, default: 0 },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });

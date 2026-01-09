@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import './FormEditorPage.css';
-import { Logo, HomeIcon, ThemesIcon, ExportIcon, SearchIcon, PlusIcon, ShareIcon, CopyIcon, WhatsAppIcon, EmailIcon, CloseIcon } from './Icons';
+import { Logo, HomeIcon, ThemesIcon, ExportIcon, SearchIcon, PlusIcon, ShareIcon, CopyIcon, WhatsAppIcon, EmailIcon, CloseIcon, SunIcon, MoonIcon } from './Icons';
 import { API_BASE_URL } from '../config';
 
 /* ---------------------- ICONS ---------------------- */
@@ -115,30 +115,37 @@ function ShareModal({ formId, formTitle, onClose }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '450px' }}>
-        <div className="modal-header">
-          <h3>Share Form</h3>
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '450px', borderRadius: '16px', border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+        <div className="modal-header" style={{ borderBottom: '1px solid var(--border-color)', padding: '16px 20px' }}>
+          <h3 style={{ color: 'var(--text-dark)', margin: 0 }}>Share Form</h3>
           <button className="btn-icon-close" onClick={onClose}><CloseIcon /></button>
         </div>
-        <div className="modal-body">
-          <p style={{ marginBottom: '1rem', color: '#666' }}>Share this form with your respondents.</p>
+        <div className="modal-body" style={{ padding: '24px 20px' }}>
+          <p style={{ marginBottom: '1.2rem', color: 'var(--text-medium)', fontSize: '14px' }}>Share this form with your respondents.</p>
 
-          <div className="share-link-box" style={{ display: 'flex', gap: '8px', marginBottom: '1.5rem' }}>
-            <input type="text" value={shareUrl} readOnly className="settings-input" style={{ flex: 1 }} />
-            <button className="btn-viewer-secondary" onClick={copyToClipboard} title="Copy Link"><CopyIcon /></button>
+          <div className="share-link-box" style={{ display: 'flex', gap: '8px', marginBottom: '2rem' }}>
+            <input
+              type="text"
+              value={shareUrl}
+              readOnly
+              className="settings-input"
+              style={{ flex: 1, padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-light-gray)', border: '1px solid var(--border-color)', color: 'var(--text-dark)' }}
+            />
+            <button className="btn-viewer-secondary" onClick={copyToClipboard} title="Copy Link" style={{ padding: '10px' }}>
+              <CopyIcon />
+            </button>
           </div>
 
-          <div className="share-options-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <button className="share-option-btn" onClick={shareWhatsApp} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '12px', border: '1px solid #eee', borderRadius: '8px', background: 'white', cursor: 'pointer' }}>
+          <div className="share-options-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <button className="share-option-btn-premium" onClick={shareWhatsApp} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', padding: '16px', border: '1px solid var(--border-color)', borderRadius: '12px', background: 'var(--bg-light-gray)', cursor: 'pointer', transition: 'all 0.2s' }}>
               <div style={{ color: '#25D366' }}><WhatsAppIcon /></div>
-              <span style={{ fontSize: '12px' }}>WhatsApp</span>
+              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-dark)' }}>WhatsApp</span>
             </button>
-            <button className="share-option-btn" onClick={shareEmail} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '12px', border: '1px solid #eee', borderRadius: '8px', background: 'white', cursor: 'pointer' }}>
+            <button className="share-option-btn-premium" onClick={shareEmail} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', padding: '16px', border: '1px solid var(--border-color)', borderRadius: '12px', background: 'var(--bg-light-gray)', cursor: 'pointer', transition: 'all 0.2s' }}>
               <div style={{ color: '#EA4335' }}><EmailIcon /></div>
-              <span style={{ fontSize: '12px' }}>Email</span>
+              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-dark)' }}>Email</span>
             </button>
           </div>
-
         </div>
       </div>
     </div>
@@ -147,7 +154,7 @@ function ShareModal({ formId, formTitle, onClose }) {
 
 /* ---------------------- MAIN EDITOR COMPONENT ---------------------- */
 
-export default function FormEditorPage({ setPage }) {
+export default function FormEditorPage({ setPage, theme, toggleTheme }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const [formTitle, setFormTitle] = useState('Untitled Form');
@@ -291,12 +298,15 @@ export default function FormEditorPage({ setPage }) {
           <div className="editor-logo" onClick={() => navigate('/dashboard')}><Logo /></div>
           <button onClick={() => navigate('/dashboard')} className="btn-icon-back">← Back to Dashboard</button>
         </div>
-        <div className="editor-header-center" style={{ flex: 1, textAlign: 'center', fontWeight: 'bold', fontSize: '18px' }}>
+        <div className="editor-header-center" style={{ flex: 1, textAlign: 'center', fontWeight: 'bold', fontSize: '18px', color: 'var(--text-dark)' }}>
           {formTitle}
         </div>
-        <div className="editor-header-right" style={{ display: 'flex', gap: '10px' }}>
+        <div className="editor-header-right" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <button onClick={toggleTheme} className="theme-toggle-btn" title="Toggle Theme" style={{ background: 'transparent', border: 'none', color: 'var(--text-dark)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+            {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+          </button>
           {id && (
-            <button className="btn-editor-secondary" onClick={() => setShowShareModal(true)} style={{ background: 'white', border: '1px solid #ddd', color: '#333', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button className="btn-share-premium" onClick={() => setShowShareModal(true)}>
               <ShareIcon /> Share
             </button>
           )}

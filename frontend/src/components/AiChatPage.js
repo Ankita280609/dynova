@@ -1,7 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeftIcon, Logo, AiBotIcon, SendIcon } from './Icons';
 
-const AiChatPage = ({ setPage }) => {
+const AiChatPage = () => {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([
     { id: 1, sender: 'bot', text: 'Hello! I am the Dynova AI Assistant. How can I help you build your form today?' },
     { id: 2, sender: 'bot', text: 'You can ask me to generate questions for a specific topic, like "Create a customer feedback survey" or "What are good questions for an event registration form?"' }
@@ -27,7 +28,7 @@ const AiChatPage = ({ setPage }) => {
   return (
     <div className="chat-page-layout page-fade-in">
       <header className="chat-header">
-        <button className="chat-back-btn" onClick={() => setPage && setPage('dashboard')}><ArrowLeftIcon /> Back to Dashboard</button>
+        <button className="chat-back-btn" onClick={() => navigate('/dashboard')}><ArrowLeftIcon /> Back to Dashboard</button>
         <div className="chat-header-title"><Logo /><span>Dynova AI Bot</span></div>
       </header>
       <main className="chat-messages">

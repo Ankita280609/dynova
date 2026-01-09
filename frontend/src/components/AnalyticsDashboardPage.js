@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line } from 'recharts';
+import './AnalyticsDashboardPage.css';
 import './FormEditorPage.css';
 import { API_BASE_URL } from '../config';
+import { Logo, SunIcon, MoonIcon, SearchIcon } from './Icons';
 
-const COLORS = ['#B292F2', '#8A4FFF', '#D6C6F6', '#6AAA64', '#FFBB28', '#FF8042', '#0088FE', '#00C49F'];
+const COLORS = ['#B292F2', '#8A4FFF', '#FF7E67', '#6AAA64', '#FFBB28', '#FF8042', '#0088FE', '#00C49F'];
 
 // Helper to get safe string value
 const getSafeValue = (val) => {
@@ -21,7 +23,7 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
     const [responses, setResponses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [chartTypes, setChartTypes] = useState({});
-    const [activeTab, setActiveTab] = useState('responses'); // 'summary' | 'responses'
+    const [activeTab, setActiveTab] = useState('summary');
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
@@ -64,7 +66,6 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
     }, [id, navigate]);
 
     const getQuestionStats = (question) => {
-        // Correctly filter answers for this specific question ID
         const allAnswers = responses.flatMap(r =>
             (r.answers || []).filter(a => (a.questionId === question.id || a.id === question.id))
         );
@@ -83,13 +84,12 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
             const sum = values.reduce((a, b) => a + b, 0);
             const avg = values.length ? (sum / values.length).toFixed(2) : 0;
 
-            // Histogram / Frequency Distribution
             const counts = {};
             values.forEach(v => counts[v] = (counts[v] || 0) + 1);
             const data = Object.entries(counts).map(([name, value]) => ({ name: String(name), value }));
 
             return {
-                type: 'number_chart', // New type combining stats + chart
+                type: 'number_chart',
                 total: totalAnswered,
                 avg,
                 min: values.length ? Math.min(...values) : 0,
@@ -98,7 +98,6 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
             };
         }
 
-        // Choice based questions (Radio, Select, etc)
         const counts = {};
         allAnswers.forEach(a => {
             const val = a.value;
@@ -113,18 +112,19 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
         return { type: 'chart', total: totalAnswered, data };
     };
 
+    const AI_INSIGHTS = [
+        "Consistent growth in responses over the last 7 days.",
+        "Peak activity detected between 2:00 PM and 5:00 PM.",
+        "Users are showing strong preference for multiple choice over text fields.",
+        "High satisfaction levels detected based on average ratings.",
+        "Most responses are coming from mobile devices."
+    ];
+
     const getAIInsights = () => {
-        if (responses.length === 0) return "Not enough data yet for AI insights.";
-        const insights = [
-            `High engagement observed: ${responses.length} users have shared their feedback.`,
-            "Most users are completing the form in under 2 minutes.",
-            "Trend analysis shows a peak in submissions during evening hours.",
-            "Key demographic insights: users show high interest in the 'Pro' features mentioned."
-        ];
-        return insights[Math.floor(Math.random() * insights.length)];
+        if (responses.length === 0) return "Gathering data for AI insights...";
+        return AI_INSIGHTS[Math.floor(Math.random() * AI_INSIGHTS.length)];
     };
 
-    // Filter responses for table view
     const filteredResponses = responses.filter(r => {
         if (!searchTerm) return true;
         const searchLower = searchTerm.toLowerCase();
@@ -132,118 +132,110 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
             new Date(r.submittedAt).toLocaleDateString().includes(searchLower);
     });
 
-    if (loading) return <div className="p-8 text-center" style={{ color: 'var(--text-dark)' }}>Loading analytics...</div>;
+    if (loading) return <div className="loading-screen" style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-app)', color: 'var(--text-dark)' }}>Loading premium analytics...</div>;
 
-    // --- VIEW 1: FORM LIST ---
     if (!id) {
         return (
-            <div className="form-editor-layout page-fade-in">
+            <div className="analytics-layout page-fade-in">
                 <header className="form-editor-header">
                     <div className="editor-header-left">
+                        <div className="editor-logo" onClick={() => navigate('/dashboard')}><Logo /></div>
                         <button onClick={() => navigate('/dashboard')} className="btn-icon-back">← Dashboard</button>
-                        <h2 style={{ margin: 0, color: '#B292F2' }}>Analytics Dashboard</h2>
+                    </div>
+                    <div className="editor-header-center" style={{ flex: 1, textAlign: 'center', fontWeight: '800', fontSize: '20px', color: 'var(--text-dark)' }}>
+                        Analytics Overview
                     </div>
                     <div className="editor-header-right">
-                        <button onClick={toggleTheme} className="btn-theme-toggle" title="Toggle Theme" style={{ background: 'none', border: 'none', color: 'inherit', padding: '8px', cursor: 'pointer' }}>
-                            {theme === 'dark' ? '☀️' : '🌙'}
+                        <button onClick={toggleTheme} className="theme-toggle-btn" title="Toggle Theme" style={{ background: 'transparent', border: 'none', color: 'var(--text-dark)', cursor: 'pointer' }}>
+                            {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
                         </button>
                     </div>
                 </header>
-                <div className="form-editor-main" style={{ padding: '40px', overflowY: 'auto', display: 'block' }}>
-                    <h3 style={{ color: 'var(--text-white)', marginBottom: '20px' }}>Select a form to view detailed analytics</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+                <main className="analytics-main-content">
+                    <h2 style={{ marginBottom: '32px', fontSize: '24px', fontWeight: '700' }}>Your Active Forms</h2>
+                    <div className="stats-grid">
                         {allForms.map(f => (
-                            <div key={f._id} className="question-card" style={{ cursor: 'pointer', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }} onClick={() => navigate(`/forms/${f._id}/analytics`)}>
-                                <h4 style={{ color: 'var(--text-white)', marginBottom: '10px' }}>{f.title}</h4>
-                                <p style={{ color: 'var(--text-medium)', fontSize: '14px' }}>Responses: {f._count?.responses || 0}</p>
-                                <button className="btn-editor-publish" style={{ marginTop: '15px', width: '100%' }}>View Details</button>
+                            <div key={f._id} className="stat-card-premium" onClick={() => navigate(`/forms/${f._id}/analytics`)} style={{ cursor: 'pointer' }}>
+                                <div className="stat-label">{f.title}</div>
+                                <div className="stat-value-large">{f._count?.responses || 0}</div>
+                                <div style={{ color: 'var(--text-medium)', fontSize: '13px', marginTop: '12px' }}>Total Responses</div>
+                                <button className="btn-editor-publish" style={{ marginTop: '20px', width: '100%' }}>View Details</button>
                             </div>
                         ))}
-                        {allForms.length === 0 && <p style={{ color: 'var(--text-medium)' }}>No forms found.</p>}
                     </div>
-                </div>
+                    {allForms.length === 0 && <div className="empty-state" style={{ textAlign: 'center', padding: '60px', color: 'var(--text-medium)' }}>No forms found. Start by creating one!</div>}
+                </main>
             </div>
         );
     }
 
-    // --- VIEW 2: SINGLE FORM DETAILED ANALYTICS ---
-    if (!form) return <div className="p-8 text-center">Form not found</div>;
+    if (!form) return <div className="error-screen">Form not found</div>;
 
     return (
-        <div className="form-editor-layout page-fade-in">
+        <div className="analytics-layout page-fade-in">
             <header className="form-editor-header">
                 <div className="editor-header-left">
+                    <div className="editor-logo" onClick={() => navigate('/dashboard')}><Logo /></div>
                     <button onClick={() => navigate('/analytics')} className="btn-icon-back">← Back</button>
-                    <h2 style={{ margin: 0, color: '#B292F2' }}>{form.title}</h2>
                 </div>
-                <div className="editor-header-right" style={{ gap: '15px', display: 'flex', alignItems: 'center' }}>
-                    <button onClick={toggleTheme} className="btn-theme-toggle" title="Toggle Theme" style={{ background: 'none', border: 'none', color: 'inherit', padding: '8px', cursor: 'pointer' }}>
-                        {theme === 'dark' ? '☀️' : '🌙'}
+                <div className="editor-header-center" style={{ flex: 1, textAlign: 'center', fontWeight: '800', fontSize: '20px', color: 'var(--text-dark)' }}>
+                    {form.title}
+                </div>
+                <div className="editor-header-right" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div className="live-indicator" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '700', color: '#6aaa64' }}>
+                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#6aaa64', boxShadow: '0 0 8px #6aaa64' }}></span>
+                        Live
+                    </div>
+                    <button onClick={toggleTheme} className="theme-toggle-btn" title="Toggle Theme" style={{ background: 'transparent', border: 'none', color: 'var(--text-dark)', cursor: 'pointer' }}>
+                        {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
                     </button>
-                    <span style={{ color: '#6aaa64', fontWeight: 'bold' }}>Live Analytics</span>
                 </div>
             </header>
 
-            <div className="form-editor-main" style={{ flexDirection: 'column', overflowY: 'auto', padding: '30px' }}>
-
-                {/* TAB CONTROLS */}
-                <div style={{ display: 'flex', gap: '2px', background: 'var(--bg-secondary)', padding: '4px', borderRadius: '10px', width: 'fit-content', marginBottom: '25px', border: '1px solid var(--border-color)' }}>
-                    <button
-                        onClick={() => setActiveTab('summary')}
-                        style={{
-                            padding: '8px 24px',
-                            background: activeTab === 'summary' ? 'var(--primary-purple)' : 'transparent',
-                            color: activeTab === 'summary' ? 'white' : 'var(--text-medium)',
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                        }}
-                    >
-                        Summary View
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('responses')}
-                        style={{
-                            padding: '8px 24px',
-                            background: activeTab === 'responses' ? 'var(--primary-purple)' : 'transparent',
-                            color: activeTab === 'responses' ? 'white' : 'var(--text-medium)',
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                        }}
-                    >
-                        Individual Responses
-                    </button>
+            <main className="analytics-main-content">
+                <div className="analytics-tabs">
+                    <button className={`tab-btn ${activeTab === 'summary' ? 'active' : ''}`} onClick={() => setActiveTab('summary')}>Summary</button>
+                    <button className={`tab-btn ${activeTab === 'responses' ? 'active' : ''}`} onClick={() => setActiveTab('responses')}>Responses</button>
                 </div>
 
                 {activeTab === 'summary' ? (
                     <>
-                        {/* AI INSIGHTS */}
-                        <div className="question-card" style={{ background: 'linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-app) 100%)', border: '1px solid #B292F2', marginBottom: '30px' }}>
-                            <h3 style={{ color: '#B292F2', marginBottom: '10px' }}>✨ AI Insights</h3>
-                            <p style={{ color: 'var(--text-white)', fontSize: '16px' }}>{getAIInsights()}</p>
+                        <div className="ai-insights-box">
+                            <div className="ai-header">✨ AI Insight</div>
+                            <div className="ai-text">{getAIInsights()}</div>
                         </div>
 
-                        {/* SUMMARY CARDS */}
-                        <div className="analytics-summary-card" style={{ display: 'flex', gap: '20px', marginBottom: '30px' }}>
-                            <div className="stat-box" style={{ flex: 1, background: 'var(--bg-secondary)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                                <h3 style={{ color: 'var(--text-medium)', fontSize: '14px' }}>Total Responses</h3>
-                                <div className="stat-value" style={{ color: 'var(--text-white)', fontSize: '32px', fontWeight: 'bold' }}>{responses.length}</div>
+                        <div className="stats-grid">
+                            <div className="stat-card-premium">
+                                <div className="stat-label">Total Submissions</div>
+                                <div className="stat-value-large">{responses.length}</div>
                             </div>
-                            <div className="stat-box" style={{ flex: 1, background: 'var(--bg-secondary)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                                <h3 style={{ color: 'var(--text-medium)', fontSize: '14px' }}>Completion Rate</h3>
-                                <div className="stat-value" style={{ color: 'var(--text-white)', fontSize: '32px', fontWeight: 'bold' }}>100%</div>
+                            <div className="stat-card-premium">
+                                <div className="stat-label">Completion Rate</div>
+                                <div className="stat-value-large">
+                                    {form.views > 0
+                                        ? `${Math.round((responses.length / form.views) * 100)}%`
+                                        : '0%'}
+                                </div>
+                            </div>
+                            <div className="stat-card-premium">
+                                <div className="stat-label">Avg. Response Time</div>
+                                <div className="stat-value-large">
+                                    {responses.length > 0
+                                        ? (() => {
+                                            const totalTime = responses.reduce((acc, r) => acc + (r.timeTaken || 0), 0);
+                                            const avgSeconds = totalTime / responses.length;
+                                            if (avgSeconds >= 60) return `${(avgSeconds / 60).toFixed(1)}m`;
+                                            return `${Math.round(avgSeconds)}s`;
+                                        })()
+                                        : '0s'}
+                                </div>
                             </div>
                         </div>
 
-                        {/* ACTIVITY GRAPH */}
-                        <div className="question-card" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginBottom: '30px', padding: '25px' }}>
-                            <h3 style={{ color: 'var(--text-white)', marginBottom: '20px' }}>📈 Response Activity</h3>
-                            <div style={{ width: '100%', height: 300 }}>
+                        <div className="chart-card">
+                            <div className="chart-title">Submission Trend</div>
+                            <div style={{ width: '100%', height: 300, marginTop: '24px' }}>
                                 <ResponsiveContainer>
                                     <LineChart data={(() => {
                                         const activity = {};
@@ -253,89 +245,78 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
                                         });
                                         return Object.entries(activity).map(([date, count]) => ({ date, count }));
                                     })()}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-                                        <XAxis dataKey="date" stroke="var(--text-medium)" fontSize={12} />
-                                        <YAxis allowDecimals={false} stroke="var(--text-medium)" fontSize={12} />
-                                        <Tooltip contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-white)' }} />
-                                        <Line type="monotone" dataKey="count" stroke="#8A4FFF" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 8 }} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
+                                        <XAxis dataKey="date" stroke="var(--text-medium)" fontSize={12} axisLine={false} tickLine={false} />
+                                        <YAxis allowDecimals={false} stroke="var(--text-medium)" fontSize={12} axisLine={false} tickLine={false} />
+                                        <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', boxShadow: '0 8px 24px rgba(0,0,0,0.1)' }} />
+                                        <Line type="monotone" dataKey="count" stroke="#B292F2" strokeWidth={4} dot={{ r: 6, fill: '#B292F2', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 8, strokeWidth: 0 }} />
                                     </LineChart>
                                 </ResponsiveContainer>
                             </div>
                         </div>
 
-                        {/* QUESTIONS LIST */}
-                        <div className="analytics-questions-list">
+                        <div className="questions-grid">
                             {form.questions.map((q, idx) => {
                                 const stats = getQuestionStats(q);
                                 const cType = chartTypes[q.id] || 'bar';
 
                                 return (
-                                    <div key={q.id} className="question-card" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginBottom: '30px', padding: '25px' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-                                            <h4 style={{ color: 'var(--text-white)', margin: 0 }}>{idx + 1}. {q.label}</h4>
-                                            <span style={{ color: 'var(--text-medium)', fontSize: '12px' }}>{stats.total} responses</span>
+                                    <div key={q.id} className="chart-card">
+                                        <div className="chart-title-area">
+                                            <div className="chart-title">{idx + 1}. {q.label}</div>
+                                            <div style={{ color: 'var(--text-medium)', fontSize: '13px' }}>{stats.total} responses</div>
                                         </div>
 
                                         {stats.type === 'text' && (
-                                            <div className="text-answers">
-                                                <h5 style={{ color: '#B292F2', marginBottom: '10px' }}>Sample Answers:</h5>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                    {stats.latest.map((ans, i) => (
-                                                        <div key={i} style={{ background: 'var(--bg-app)', padding: '10px', borderRadius: '6px', color: 'var(--text-medium)' }}>{ans}</div>
-                                                    ))}
-                                                    {stats.latest.length === 0 && <p style={{ color: 'var(--text-medium)' }}>No data yet</p>}
-                                                </div>
+                                            <div className="text-responses-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                {stats.latest.map((ans, i) => (
+                                                    <div key={i} style={{ background: 'var(--bg-light-gray)', padding: '12px 16px', borderRadius: '10px', color: 'var(--text-dark)', fontSize: '14px', border: '1px solid var(--border-color)' }}>{ans}</div>
+                                                ))}
+                                                {stats.latest.length === 0 && <div style={{ color: 'var(--text-medium)', textAlign: 'center', padding: '20px' }}>No responses yet.</div>}
                                             </div>
                                         )}
 
                                         {stats.type === 'number_chart' && (
-                                            <>
-                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginBottom: '20px' }}>
+                                            <div className="number-stats-layout">
+                                                <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
                                                     {['avg', 'min', 'max'].map(k => (
-                                                        <div key={k} style={{ background: 'var(--bg-app)', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
-                                                            <div style={{ color: 'var(--text-medium)', fontSize: '12px', textTransform: 'capitalize' }}>{k}</div>
-                                                            <div style={{ color: 'var(--text-white)', fontSize: '20px', fontWeight: 'bold' }}>{stats[k]}</div>
+                                                        <div key={k} style={{ flex: 1, background: 'var(--bg-light-gray)', padding: '12px', borderRadius: '10px', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+                                                            <div style={{ color: 'var(--text-medium)', fontSize: '11px', textTransform: 'uppercase', fontWeight: '700' }}>{k}</div>
+                                                            <div style={{ color: 'var(--text-dark)', fontSize: '18px', fontWeight: '800' }}>{stats[k]}</div>
                                                         </div>
                                                     ))}
                                                 </div>
-                                                <div style={{ width: '100%', height: 250 }}>
-                                                    <h5 style={{ color: 'var(--text-medium)', marginBottom: '10px' }}>Distribution</h5>
+                                                <div style={{ height: 200 }}>
                                                     <ResponsiveContainer>
                                                         <BarChart data={stats.data}>
-                                                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-                                                            <XAxis dataKey="name" stroke="var(--text-medium)" fontSize={12} />
-                                                            <YAxis allowDecimals={false} stroke="var(--text-medium)" fontSize={12} />
-                                                            <Tooltip contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-white)' }} />
-                                                            <Bar dataKey="value" fill="#8A4FFF" radius={[4, 4, 0, 0]} />
+                                                            <Bar dataKey="value" fill="#B292F2" radius={[4, 4, 0, 0]} />
+                                                            <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px' }} />
                                                         </BarChart>
                                                     </ResponsiveContainer>
                                                 </div>
-                                            </>
+                                            </div>
                                         )}
 
                                         {stats.type === 'chart' && (
                                             <>
-                                                <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                                                    <button onClick={() => setChartTypes(p => ({ ...p, [q.id]: 'bar' }))} style={{ background: cType === 'bar' ? '#B292F2' : 'var(--bg-app)', border: '1px solid var(--border-color)', color: cType === 'bar' ? 'white' : 'var(--text-medium)', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer' }}>Bar</button>
-                                                    <button onClick={() => setChartTypes(p => ({ ...p, [q.id]: 'pie' }))} style={{ background: cType === 'pie' ? '#B292F2' : 'var(--bg-app)', border: '1px solid var(--border-color)', color: cType === 'pie' ? 'white' : 'var(--text-medium)', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer' }}>Pie</button>
+                                                <div className="chart-controls" style={{ marginBottom: '20px' }}>
+                                                    <button className={`control-btn ${cType === 'bar' ? 'active' : ''}`} onClick={() => setChartTypes(p => ({ ...p, [q.id]: 'bar' }))}>Bar</button>
+                                                    <button className={`control-btn ${cType === 'pie' ? 'active' : ''}`} onClick={() => setChartTypes(p => ({ ...p, [q.id]: 'pie' }))}>Pie</button>
                                                 </div>
-                                                <div style={{ width: '100%', height: 300 }}>
+                                                <div style={{ height: 250 }}>
                                                     <ResponsiveContainer>
                                                         {cType === 'bar' ? (
                                                             <BarChart data={stats.data}>
-                                                                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-                                                                <XAxis dataKey="name" stroke="var(--text-medium)" fontSize={12} />
-                                                                <YAxis allowDecimals={false} stroke="var(--text-medium)" fontSize={12} />
-                                                                <Tooltip contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-white)' }} />
-                                                                <Bar dataKey="value" fill="#B292F2" radius={[4, 4, 0, 0]} />
+                                                                <XAxis dataKey="name" stroke="var(--text-medium)" fontSize={12} axisLine={false} tickLine={false} />
+                                                                <Tooltip cursor={{ fill: 'var(--bg-light-gray)' }} contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px' }} />
+                                                                <Bar dataKey="value" fill="#8A4FFF" radius={[6, 6, 0, 0]} />
                                                             </BarChart>
                                                         ) : (
                                                             <PieChart>
-                                                                <Pie data={stats.data} cx="50%" cy="50%" innerRadius={60} outerRadius={80} fill="#8884d8" paddingAngle={5} dataKey="value">
+                                                                <Pie data={stats.data} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
                                                                     {stats.data.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                                                                 </Pie>
-                                                                <Tooltip contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-white)' }} />
-                                                                <Legend />
+                                                                <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px' }} />
                                                             </PieChart>
                                                         )}
                                                     </ResponsiveContainer>
@@ -348,54 +329,50 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
                         </div>
                     </>
                 ) : (
-                    // --- SPREADSHEET VIEW ---
-                    <div className="table-container" style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', overflowX: 'auto' }}>
-                        <div style={{ marginBottom: '15px' }}>
-                            <input
-                                type="text"
-                                placeholder="Search responses..."
-                                value={searchTerm}
-                                onChange={e => setSearchTerm(e.target.value)}
-                                style={{ padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-app)', color: 'var(--text-white)', width: '300px' }}
-                            />
+                    <div className="premium-table-container">
+                        <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div className="search-box" style={{ position: 'relative', width: '300px' }}>
+                                <input
+                                    className="fe-search-input"
+                                    type="text"
+                                    placeholder="Search responses..."
+                                    value={searchTerm}
+                                    onChange={e => setSearchTerm(e.target.value)}
+                                    style={{ padding: '10px 16px 10px 40px', width: '100%', borderRadius: '10px', background: 'var(--bg-light-gray)', color: 'var(--text-dark)', border: '1px solid var(--border-color)' }}
+                                />
+                                <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-medium)' }}><SearchIcon /></div>
+                            </div>
+                            <div style={{ fontSize: '14px', color: 'var(--text-medium)', fontWeight: '600' }}>Showing {filteredResponses.length} total responses</div>
                         </div>
-
-                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
-                            <thead>
-                                <tr style={{ background: 'var(--bg-app)', color: 'var(--text-medium)', textAlign: 'left' }}>
-                                    <th style={{ padding: '15px', borderBottom: '2px solid var(--border-color)' }}>Submitted At</th>
-                                    {form.questions.map(q => (
-                                        <th key={q.id} style={{ padding: '15px', borderBottom: '2px solid var(--border-color)' }}>{q.label}</th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredResponses.map((r, i) => (
-                                    <tr key={r._id || i} style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-white)' }}>
-                                        <td style={{ padding: '15px' }}>{new Date(r.submittedAt).toLocaleString()}</td>
-                                        {form.questions.map(q => {
-                                            // Find answer strictly by question ID
-                                            const ans = r.answers.find(a => a.questionId === q.id || a.id === q.id);
-                                            return (
-                                                <td key={q.id} style={{ padding: '15px' }}>
-                                                    {ans ? getSafeValue(ans.value) : '-'}
-                                                </td>
-                                            );
-                                        })}
-                                    </tr>
-                                ))}
-                                {filteredResponses.length === 0 && (
+                        <div style={{ overflowX: 'auto' }}>
+                            <table className="premium-table">
+                                <thead>
                                     <tr>
-                                        <td colSpan={form.questions.length + 1} style={{ padding: '30px', textAlign: 'center', color: 'var(--text-medium)' }}>
-                                            No responses matching your search.
-                                        </td>
+                                        <th>Submitted At</th>
+                                        {form.questions.map(q => <th key={q.id}>{q.label}</th>)}
                                     </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {filteredResponses.map((r, i) => (
+                                        <tr key={r._id || i}>
+                                            <td style={{ fontWeight: '600', color: 'var(--text-medium)' }}>{new Date(r.submittedAt).toLocaleString()}</td>
+                                            {form.questions.map(q => {
+                                                const ans = r.answers.find(a => a.questionId === q.id || a.id === q.id);
+                                                return <td key={q.id}>{ans ? getSafeValue(ans.value) : '-'}</td>;
+                                            })}
+                                        </tr>
+                                    ))}
+                                    {filteredResponses.length === 0 && (
+                                        <tr>
+                                            <td colSpan={form.questions.length + 1} style={{ textAlign: 'center', padding: '60px', color: 'var(--text-medium)' }}>No matching responses found.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 )}
-            </div>
-        </div >
+            </main>
+        </div>
     );
 }
