@@ -165,49 +165,6 @@ export default function FormEditorPage({ setPage, theme, toggleTheme }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [openSubheading, setOpenSubheading] = useState({});
   const [showShareModal, setShowShareModal] = useState(false);
-  const [showAiPrompt, setShowAiPrompt] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [aiLoading, setAiLoading] = useState(false);
-
-  // Generate form using Gemini API
-  const handleGenerateWithAI = async () => {
-    if (!aiPrompt.trim()) return;
-    setAiLoading(true);
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/ai/generate-form`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: aiPrompt })
-      });
-
-      if (!response.ok) throw new Error('Failed to generate form');
-      const formData = await response.json();
-
-      if (formData.title) setFormTitle(formData.title);
-      if (formData.description) setFormDescription(formData.description);
-
-      if (formData.elements && Array.isArray(formData.elements)) {
-        const newQuestions = formData.elements.map(el => ({
-          id: makeInstanceId(el.type),
-          type: el.type,
-          label: el.label || defaultLabelFor(el.type),
-          meta: { ...initializeMeta(el.type), options: el.options || [] },
-          required: el.required || false,
-          conditional: { enabled: false, rules: [] }
-        }));
-        setQuestions(newQuestions);
-        alert('AI generated your form!');
-        setShowAiPrompt(false);
-        setAiPrompt('');
-      }
-    } catch (error) {
-      console.error(error);
-      alert('Failed to generate form with AI');
-    } finally {
-      setAiLoading(false);
-    }
-  };
 
   // Load form
   useEffect(() => {
@@ -345,9 +302,6 @@ export default function FormEditorPage({ setPage, theme, toggleTheme }) {
           {formTitle}
         </div>
         <div className="editor-header-right" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <button onClick={() => setShowAiPrompt(true)} className="btn-viewer-secondary" title="Generate with AI" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <AiBotIcon /> Generate with AI
-          </button>
           <button onClick={toggleTheme} className="theme-toggle-btn" title="Toggle Theme" style={{ background: 'transparent', border: 'none', color: 'var(--text-dark)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
             {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
           </button>
@@ -472,37 +426,6 @@ export default function FormEditorPage({ setPage, theme, toggleTheme }) {
           />
         </aside>
       </div>
-
-      {/* AI PROMPT MODAL */}
-      {showAiPrompt && (
-        <div className="modal-overlay" onClick={() => setShowAiPrompt(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
-            <div className="modal-header">
-              <h3>Generate Form with AI</h3>
-              <button className="btn-icon-close" onClick={() => setShowAiPrompt(false)}><CloseIcon /></button>
-            </div>
-            <div className="modal-body" style={{ padding: '20px' }}>
-              <p style={{ marginBottom: '16px', color: 'var(--text-medium)' }}>Describe the form you want to create:</p>
-              <textarea
-                className="q-textarea"
-                value={aiPrompt}
-                onChange={e => setAiPrompt(e.target.value)}
-                placeholder="e.g., Create a gym membership registration form with name, email, membership type"
-                rows={5}
-                style={{ width: '100%', resize: 'vertical', marginBottom: '16px' }}
-              />
-              <button
-                className="btn-editor-publish"
-                onClick={handleGenerateWithAI}
-                disabled={aiLoading || !aiPrompt.trim()}
-                style={{ width: '100%' }}
-              >
-                {aiLoading ? 'Generating...' : 'Generate Form'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );
