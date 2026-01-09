@@ -25,6 +25,8 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
     const [chartTypes, setChartTypes] = useState({});
     const [activeTab, setActiveTab] = useState('summary');
     const [searchTerm, setSearchTerm] = useState('');
+    const [sentiments, setSentiments] = useState({}); // Stores { responseId-questionId: sentiment }
+    const [analyzingIds, setAnalyzingIds] = useState(new Set());
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -64,6 +66,40 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
                 });
         }
     }, [id, navigate]);
+
+    const analyzeSentiment = async (responseId, questionId, text) => {
+        if (!text || text === '-' || text.length < 3) return;
+        const key = `${responseId}-${questionId}`;
+        if (sentiments[key] || analyzingIds.has(key)) return;
+
+        setAnalyzingIds(prev => new Set(prev).add(key));
+        try {
+            const res = await fetch(`${API_BASE_URL}/ai/sentiment`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setSentiments(prev => ({ ...prev, [key]: data.sentiment }));
+            }
+        } catch (err) {
+            console.error('Sentiment Error:', err);
+        } finally {
+            setAnalyzingIds(prev => {
+                const next = new Set(prev);
+                next.delete(key);
+                return next;
+            });
+        }
+    };
+
+    const getSentimentEmoji = (sentiment) => {
+        if (sentiment === 'positive') return '😊';
+        if (sentiment === 'neutral') return '😐';
+        if (sentiment === 'negative') return '😠';
+        return null;
+    };
 
     const getQuestionStats = (question) => {
         const allAnswers = responses.flatMap(r =>
@@ -269,9 +305,15 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
 
                                         {stats.type === 'text' && (
                                             <div className="text-responses-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                                {stats.latest.map((ans, i) => (
-                                                    <div key={i} style={{ background: 'var(--bg-light-gray)', padding: '12px 16px', borderRadius: '10px', color: 'var(--text-dark)', fontSize: '14px', border: '1px solid var(--border-color)' }}>{ans}</div>
-                                                ))}
+                                                {stats.latest.map((ans, i) => {
+                                                    // Note: stats.latest only has values, not IDs. 
+                                                    // In a real app we'd need IDs. For now, we'll try to match or just show latest in table.
+                                                    return (
+                                                        <div key={i} style={{ background: 'var(--bg-light-gray)', padding: '12px 16px', borderRadius: '10px', color: 'var(--text-dark)', fontSize: '14px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                            <span>{ans}</span>
+                                                        </div>
+                                                    );
+                                                })}
                                                 {stats.latest.length === 0 && <div style={{ color: 'var(--text-medium)', textAlign: 'center', padding: '20px' }}>No responses yet.</div>}
                                             </div>
                                         )}
@@ -358,7 +400,28 @@ export default function AnalyticsDashboardPage({ theme, toggleTheme }) {
                                             <td style={{ fontWeight: '600', color: 'var(--text-medium)' }}>{new Date(r.submittedAt).toLocaleString()}</td>
                                             {form.questions.map(q => {
                                                 const ans = r.answers.find(a => a.questionId === q.id || a.id === q.id);
-                                                return <td key={q.id}>{ans ? getSafeValue(ans.value) : '-'}</td>;
+                                                const val = ans ? getSafeValue(ans.value) : '-';
+                                                const key = `${r._id}-${q.id}`;
+                                                const sentiment = sentiments[key];
+                                                const isText = ['shortText', 'longText', 'nameField'].includes(q.type);
+
+                                                return (
+                                                    <td key={q.id}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            {val}
+                                                            {isText && val !== '-' && !sentiment && (
+                                                                <button
+                                                                    onClick={() => analyzeSentiment(r._id, q.id, val)}
+                                                                    disabled={analyzingIds.has(key)}
+                                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: 'var(--primary-purple)', padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(177, 146, 241, 0.1)' }}
+                                                                >
+                                                                    {analyzingIds.has(key) ? '...' : '✨'}
+                                                                </button>
+                                                            )}
+                                                            {sentiment && <span title={sentiment} style={{ fontSize: '16px' }}>{getSentimentEmoji(sentiment)}</span>}
+                                                        </div>
+                                                    </td>
+                                                );
                                             })}
                                         </tr>
                                     ))}

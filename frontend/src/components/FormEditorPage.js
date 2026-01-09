@@ -165,6 +165,7 @@ export default function FormEditorPage({ setPage, theme, toggleTheme }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [openSubheading, setOpenSubheading] = useState({});
   const [showShareModal, setShowShareModal] = useState(false);
+  const [safetyChecking, setSafetyChecking] = useState(false);
 
   // Load form
   useEffect(() => {
@@ -180,8 +181,47 @@ export default function FormEditorPage({ setPage, theme, toggleTheme }) {
     }
   }, [id]);
 
+  const checkContentSafety = async (text) => {
+    if (!text.trim()) return null;
+    try {
+      const response = await fetch(`${API_BASE_URL}/ai/moderate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      if (!response.ok) return null;
+      return await response.json();
+    } catch (err) {
+      console.error('Safety check error:', err);
+      return null;
+    }
+  };
+
   const saveForm = async () => {
     setIsSubmitting(true);
+    setSafetyChecking(true);
+
+    // 1. Safety Check (Title + Description)
+    try {
+      const safetyResult = await checkContentSafety(`${formTitle} ${formDescription}`);
+      if (safetyResult && safetyResult.categoriesAnalysis) {
+        const highSeverityItems = safetyResult.categoriesAnalysis.filter(cat => cat.severity > 0);
+        if (highSeverityItems.length > 0) {
+          const categories = highSeverityItems.map(c => c.category).join(', ');
+          const proceed = window.confirm(`⚠️ Content Safety Warning: Potential sensitive content detected (${categories}). Are you sure you want to proceed?`);
+          if (!proceed) {
+            setIsSubmitting(false);
+            setSafetyChecking(false);
+            return;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Safety check skipped due to error');
+    } finally {
+      setSafetyChecking(false);
+    }
+
     const token = localStorage.getItem('token');
     if (!token) {
       alert("You must be logged in to save a form.");
