@@ -10,7 +10,8 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 // Connect to MongoDB
-connectDB();
+// Global connection removed to avoid blocking cold starts; handled by middleware
+// connectDB();
 
 // Middleware to ensure DB is connected
 app.use(async (req, res, next) => {
