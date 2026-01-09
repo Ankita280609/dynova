@@ -20,7 +20,7 @@ const geminiApiKey = process.env.GEMINI_API_KEY;
 // --- Clients ---
 let genAI;
 if (geminiApiKey) {
-    genAI = new GoogleGenerativeAI(geminiApiKey);
+  genAI = new GoogleGenerativeAI(geminiApiKey);
 }
 
 // Azure clients - commented out
@@ -38,14 +38,21 @@ if (geminiApiKey) {
 // POST /api/ai/generate-form
 // Body: { prompt: "Create a gym membership form" }
 router.post('/generate-form', async (req, res) => {
+  console.log('--- AI Debug Start ---');
+  console.log('GEMINI_API_KEY present:', !!process.env.GEMINI_API_KEY);
+  console.log('OPENAI_API_KEY present:', !!process.env.OPENAI_API_KEY);
+
+  try {
     const { prompt } = req.body;
     if (!prompt) return res.status(400).json({ error: "Prompt is required" });
-    if (!genAI) return res.status(503).json({ error: "Gemini API not configured" });
+    if (!genAI) {
+      console.error('Gemini error: genAI client not initialized (missing API key)');
+      return res.status(503).json({ error: "Gemini API not configured" });
+    }
 
-    try {
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-        const systemPrompt = `You are a form builder assistant. Generate a JSON structure for a form based on the user's request.
+    const systemPrompt = `You are a form builder assistant. Generate a JSON structure for a form based on the user's request.
 Return ONLY valid JSON with this structure:
 {
   "title": "Form Title",
@@ -60,24 +67,37 @@ Return ONLY valid JSON with this structure:
   ]
 }`;
 
-        const result = await model.generateContent(`${systemPrompt}\n\nUser request: ${prompt}`);
-        const response = await result.response;
-        const text = response.text();
+    console.log('Generating content for prompt:', prompt);
+    const result = await model.generateContent(`${systemPrompt}\n\nUser request: ${prompt}`);
+    const response = await result.response;
+    const text = response.text();
+    console.log('AI Response text received');
 
-        // Extract JSON from response
-        let formData;
-        try {
-            const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-            formData = JSON.parse(cleanText);
-        } catch (e) {
-            formData = JSON.parse(text);
-        }
-
-        res.json(formData);
-    } catch (error) {
-        console.error("Gemini Error:", error);
-        res.status(500).json({ error: "Failed to generate form", details: error.message });
+    // Extract JSON from response
+    let formData;
+    try {
+      const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      formData = JSON.parse(cleanText);
+    } catch (e) {
+      console.warn('JSON parse fallback used');
+      formData = JSON.parse(text);
     }
+
+    console.log('Successfully generated form JSON');
+    res.json(formData);
+  } catch (error) {
+    console.error("--- AI ERROR DETECTED ---");
+    console.error("Full Error Object:", error);
+    console.error("Error Message:", error.message);
+    if (error.stack) console.error("Stack Trace:", error.stack);
+    res.status(500).json({
+      error: "Failed to generate form",
+      details: error.message,
+      debug: "Check backend logs for more info"
+    });
+  } finally {
+    console.log('--- AI Debug End ---');
+  }
 });
 
 // Azure endpoints - commented out but keeping structure for when you add them later
